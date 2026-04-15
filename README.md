@@ -1,4 +1,7 @@
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Open-2ea44f?style=for-the-badge)](https://jayhemnani9910.github.io/cpu-scheduling-algorithms/)
+[![CI](https://github.com/jayhemnani9910/cpu-scheduling-algorithms/actions/workflows/ci.yml/badge.svg)](https://github.com/jayhemnani9910/cpu-scheduling-algorithms/actions/workflows/ci.yml)
+[![Pages](https://github.com/jayhemnani9910/cpu-scheduling-algorithms/actions/workflows/pages.yml/badge.svg)](https://github.com/jayhemnani9910/cpu-scheduling-algorithms/actions/workflows/pages.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 # CPU Scheduling Algorithms
 
@@ -62,3 +65,53 @@
 - Vanilla JS
 - Google Charts
 - Chart.js
+
+## Demo
+
+Try it live: **https://jayhemnani9910.github.io/cpu-scheduling-algorithms/**
+
+<!-- TODO: add a screenshot or GIF of the visualization at docs/screenshot.png and reference it here -->
+
+## Running Tests
+
+```bash
+node tests.js
+# or
+npm test
+```
+
+All 9 algorithms have unit tests covering arrival ordering, preemption, tiebreaks, and edge cases.
+
+## Quick Start
+
+No build step — it's a static site.
+
+```bash
+git clone https://github.com/jayhemnani9910/cpu-scheduling-algorithms.git
+cd cpu-scheduling-algorithms
+# Open directly:
+open index.html
+# Or serve locally:
+python3 -m http.server 8000
+```
+
+## Architecture
+
+| File | Purpose |
+|------|---------|
+| `index.html` | UI layout, form inputs, chart containers |
+| `style.css` | Styling |
+| `script.js` | All scheduling algorithms, state machine, chart rendering |
+| `tests.js` | Algorithm correctness tests |
+
+External dependencies (loaded via CDN in `index.html`):
+- [Google Charts](https://developers.google.com/chart) — Gantt and timeline charts
+- [Chart.js](https://www.chartjs.org/) — comparison bar charts
+
+## Contributing
+
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+Released under the [MIT License](LICENSE).

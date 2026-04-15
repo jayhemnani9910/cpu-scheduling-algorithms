@@ -1,0 +1,52 @@
+name: Bug report
+description: Report something that's broken
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the bug clearly.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser / version
+      placeholder: "Chrome 126, Firefox 127, etc."
+    validations:
+      required: true
+  - type: dropdown
+    id: algorithm
+    attributes:
+      label: Which algorithm (if applicable)?
+      options:
+        - Not algorithm-specific
+        - FCFS
+        - SJF
+        - SRJF
+        - LJF
+        - LRJF
+        - Priority Non-Preemptive
+        - Priority Preemptive
+        - Round Robin
+        - HRRN
+    validations:
+      required: false

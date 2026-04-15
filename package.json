@@ -1,0 +1,22 @@
+{
+  "name": "cpu-scheduling-algorithms",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CPU Scheduling Algorithms Visualization - IEEE Research Paper Implementation",
+  "homepage": "https://jayhemnani9910.github.io/cpu-scheduling-algorithms/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jayhemnani9910/cpu-scheduling-algorithms.git"
+  },
+  "license": "MIT",
+  "scripts": {
+    "test": "node tests.js",
+    "lint": "eslint . --ext .js",
+    "format": "prettier --write \"**/*.{js,css,html,md,json,yml}\"",
+    "format:check": "prettier --check \"**/*.{js,css,html,md,json,yml}\""
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0",
+    "prettier": "^3.3.0"
+  }
+}

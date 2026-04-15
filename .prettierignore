@@ -1,0 +1,4 @@
+node_modules/
+.github/
+*.min.js
+*.min.css
