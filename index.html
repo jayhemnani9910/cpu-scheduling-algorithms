@@ -4,185 +4,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Interactive CPU Scheduling Algorithms Simulator — FCFS, SJF, SRTF, LJF, LRTF, Round Robin, Priority, HRRN with Gantt charts and visualizations.">
-    <title>CPU Scheduling Simulator</title>
+    <title>Scheduling Algorithms</title>
     <link rel="icon" href="favicon.png">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 </head>
 
 <body>
-    <div class="app-container">
 
-        <!-- Header -->
-        <header class="app-header">
-            <h1>CPU Scheduling Simulator</h1>
-            <p class="subtitle">Interactive visualization of 9 scheduling algorithms</p>
-            <div class="header-badge">
-                <span class="dot"></span>
-                <span>Vanilla JS · No Framework</span>
-            </div>
-        </header>
-
-        <!-- Algorithm Selection -->
-        <section class="glass-card" id="algo-card">
-            <div class="card-header">
-                <h2><span class="icon">⚡</span> Algorithm</h2>
-                <div id="priority-container" class="hide">
-                    <button type="button" class="priority-toggle" id="priority-toggle-btn">
-                        Priority 1 = <span class="toggle-value" id="priority-preference">High</span> &nbsp;↻
-                    </button>
-                </div>
-            </div>
-            <div class="algorithm-selector" id="algorithm-selector">
-                <div class="algo-option">
-                    <input type="radio" name="algo" id="algo-fcfs" value="fcfs" checked>
-                    <label for="algo-fcfs">
-                        <span class="algo-name">FCFS</span>
-                        <span class="algo-type">Non-Preemptive</span>
-                    </label>
-                </div>
-                <div class="algo-option">
-                    <input type="radio" name="algo" id="algo-sjf" value="sjf">
-                    <label for="algo-sjf">
-                        <span class="algo-name">SJF</span>
-                        <span class="algo-type">Non-Preemptive</span>
-                    </label>
-                </div>
-                <div class="algo-option">
-                    <input type="radio" name="algo" id="algo-srtf" value="srtf">
-                    <label for="algo-srtf">
-                        <span class="algo-name">SRTF</span>
-                        <span class="algo-type">Preemptive</span>
-                    </label>
-                </div>
-                <div class="algo-option">
-                    <input type="radio" name="algo" id="algo-ljf" value="ljf">
-                    <label for="algo-ljf">
-                        <span class="algo-name">LJF</span>
-                        <span class="algo-type">Non-Preemptive</span>
-                    </label>
-                </div>
-                <div class="algo-option">
-                    <input type="radio" name="algo" id="algo-lrtf" value="lrtf">
-                    <label for="algo-lrtf">
-                        <span class="algo-name">LRTF</span>
-                        <span class="algo-type">Preemptive</span>
-                    </label>
-                </div>
-                <div class="algo-option">
-                    <input type="radio" name="algo" id="algo-rr" value="rr">
-                    <label for="algo-rr">
-                        <span class="algo-name">Round Robin</span>
-                        <span class="algo-type">Preemptive</span>
-                    </label>
-                </div>
-                <div class="algo-option">
-                    <input type="radio" name="algo" id="algo-pnp" value="pnp">
-                    <label for="algo-pnp">
-                        <span class="algo-name">Priority (NP)</span>
-                        <span class="algo-type">Non-Preemptive</span>
-                    </label>
-                </div>
-                <div class="algo-option">
-                    <input type="radio" name="algo" id="algo-pp" value="pp">
-                    <label for="algo-pp">
-                        <span class="algo-name">Priority (P)</span>
-                        <span class="algo-type">Preemptive</span>
-                    </label>
-                </div>
-                <div class="algo-option">
-                    <input type="radio" name="algo" id="algo-hrrn" value="hrrn">
-                    <label for="algo-hrrn">
-                        <span class="algo-name">HRRN</span>
-                        <span class="algo-type">Non-Preemptive</span>
-                    </label>
-                </div>
-            </div>
-            <div class="algo-info-panel" id="algo-info-panel">
-                <div class="info-title" id="algo-info-title"></div>
-                <div class="info-desc" id="algo-info-desc"></div>
-                <div class="info-complexity" id="algo-info-complexity"></div>
-            </div>
-        </section>
-
-        <!-- Presets -->
-        <section class="glass-card" id="presets-card">
-            <div class="card-header">
-                <h2><span class="icon">📋</span> Quick Presets</h2>
-            </div>
-            <div class="presets-grid" id="presets-grid"></div>
-        </section>
-
-        <!-- Process Input -->
-        <section class="glass-card" id="input-card">
-            <div class="card-header">
-                <h2><span class="icon">📊</span> Process Table</h2>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-secondary" id="add-process-btn">+ Add Process</button>
-                    <button type="button" class="btn btn-danger" id="remove-process-btn">− Remove</button>
-                </div>
-            </div>
-            <div class="process-table-wrapper">
-                <table class="process-table" id="process-table">
-                    <thead>
-                        <tr>
-                            <th>Process</th>
-                            <th class="priority-col hide">Priority</th>
-                            <th>Arrival Time</th>
-                            <th>Burst Times</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="process-table-body">
-                        <!-- Rows generated by JS -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="section-divider"></div>
-
-            <!-- Config -->
-            <div class="config-row">
-                <div class="config-field">
-                    <label for="context-switch">Context Switch</label>
-                    <input type="number" id="context-switch" min="0" step="1" value="0">
-                </div>
-                <div class="config-field hide" id="tq-field">
-                    <label for="tq">Time Quantum</label>
-                    <input type="number" id="tq" min="1" step="1" value="2">
-                </div>
-            </div>
-        </section>
-
-        <!-- Instructions -->
-        <section class="glass-card">
-            <div class="card-header">
-                <h2><span class="icon">ℹ️</span> Rules</h2>
-            </div>
-            <ul class="instructions-list">
-                <li>Tiebreaker: Process ID</li>
-                <li>Total burst time used for comparison</li>
-                <li>Context switch not at start/end</li>
-            </ul>
-        </section>
-
-        <!-- Action Buttons -->
-        <div class="btn-group" style="justify-content: center; margin: 24px 0;">
-            <button type="button" class="btn btn-primary btn-lg" id="calculate-btn">
-                ▶ Calculate
+    <h1>Scheduling Algorithms</h1>
+    <h3>Instructions :</h3>
+    <ol class="instructions">
+        <li>Tiebreaker is Process ID.</li>
+        <li>When burst time is criteria, total burst time is taken into consideration.</li>
+        <li>Context Switch not considered at start and end of processes.</li>
+    </ol>
+    <h3>Preferences :</h3>
+    <ol class="preferences">
+        <li>
+            Priority : 1 is
+            <button id="priority-toggle-btn">
+                <span id="priority-preference">high</span>
+                <i class="fa fa-refresh"></i>
             </button>
-            <button type="button" class="btn btn-secondary btn-lg" id="reset-btn">
-                ↻ Reset
-            </button>
+        </li>
+        <form id="algorithms-form">
+            <label for="algo"><h3>Algorithms : </h3></label>
+            <select name="algo" id="algo">
+                <option value="fcfs">First Come First Serve (FCFS)</option>
+                <option value="sjf">Shortest Job First (SJF)</option>
+                <option value="ljf">Longest Job First (LJF)</option>
+                <option value="srtf">Shortest Remaining Job First (SRTF)</option>
+                <option value="lrtf">Longest Remaining Job First (LRTF)</option>
+                <option value="rr">Round Robin</option>
+                <option value="pnp">Priority (Non Preemptive)</option>
+                <option value="pp">Priority (Preemptive)</option>
+                <option value="hrrn">Highest Response Ratio Next (HRRN)</option>
+            </select>
+        </form>
+        <br>
+        <table class="main-table">
+            <thead>
+                <tr>
+                    <th class="process-id">Process ID</th>
+                    <th class="priority hide">Priority</th>
+                    <th class="arrival-time">Arrival Time</th>
+                    <th class="process-time" colspan="1">Process Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="process-id" rowspan="2">P1</td>
+                    <td class="priority hide" rowspan="2"><input type="number" min="1" step="1" value="1"></td>
+                    <td class="arrival-time" rowspan="2"><input type="number" min="0" step="1" value="0"> </td>
+                    <td class="process-time cpu process-heading" colspan="">CPU</td>
+                    <td class="process-btn"><button type="button" class="add-process-btn">+</button></td>
+                    <td class="process-btn"><button type="button" class="remove-process-btn">-</button></td>
+                </tr>
+                <tr>
+                    <td class="process-time cpu process-input"><input type="number" min="1" step="1" value="1"> </td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        <button type="button" class="add-btn">Add Process</button>
+        <button type="button" class="remove-btn">Delete Process</button>
+        <div id="context-switch-div">
+            <br>
+            <label for="context-switch">Context Switch Time : </label>
+            <input type="number" name="Context Switch" id="context-switch" min="0" step="1" value="0">
         </div>
+        <div id="time-quantum" class="hide">
+            <br>
+            <label for="tq">Time Quantum : </label>
+            <input type="number" name="Time Quantum" id="tq" min="1" step="1" value="1">
+        </div>
+        <br>
+        <button type="button" id="calculate">Calculate</button>
+        <button type="button" id="reset" onClick="window.location.reload();">Reset</button>
+        <div id="output"></div>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" integrity="sha512-d9xgZrVZpmmQlfonhQUvTR7lMPtO7NkZMkA0ABN3PHCbKA5nqylQ/yWlFAyY6hYgdF1Qh6nYiuADWwKB4C2WSw==" crossorigin="anonymous"></script>
+        <script src="script.js"></script>
 
-        <!-- Output -->
-        <div id="output-section"></div>
-
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-    <script src="script.js"></script>
 </body>
 
 </html>

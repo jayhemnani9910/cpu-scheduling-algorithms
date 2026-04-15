@@ -1,18 +1,221 @@
-/**
- * CPU Scheduling Algorithms Simulator
- * Complete rewrite with bug fixes, modular architecture, and modern UI
- */
+let priorityPreference = 1; //priority preferences change
+document.getElementById("priority-toggle-btn").onclick = () => {
+    let currentPriorityPreference = document.getElementById("priority-preference").innerText;
+    if (currentPriorityPreference == "high") {
+        document.getElementById("priority-preference").innerText = "low";
+    } else {
+        document.getElementById("priority-preference").innerText = "high";
+    }
+    priorityPreference *= -1;
+};
 
-// ============================================================
-// SECTION 1: DATA CLASSES
-// ============================================================
+let selectedAlgorithm = document.getElementById('algo');
 
+function checkTimeQuantumInput() {
+    let timequantum = document.querySelector("#time-quantum").classList;
+    if (selectedAlgorithm.value == 'rr') {
+        timequantum.remove("hide");
+    } else {
+        timequantum.add("hide");
+    }
+}
+
+function checkPriorityCell() {
+    let prioritycell = document.querySelectorAll(".priority");
+    if (selectedAlgorithm.value == "pnp" || selectedAlgorithm.value == "pp") {
+        prioritycell.forEach((element) => {
+            element.classList.remove("hide");
+        });
+    } else {
+        prioritycell.forEach((element) => {
+            element.classList.add("hide");
+        });
+    }
+}
+
+selectedAlgorithm.onchange = () => {
+    checkTimeQuantumInput();
+    checkPriorityCell();
+};
+
+function inputOnChange() { //onchange EventListener for input
+    let inputs = document.querySelectorAll('input');
+    inputs.forEach((input) => {
+        if (input.type == 'number') {
+            input.onchange = () => {
+                let inputVal = Number(input.value);
+                let isInt = Number.isInteger(inputVal);
+                if (input.parentNode.classList.contains('arrival-time') || input.id == 'context-switch') //min 0 : arrival time
+                {
+                    if (!isInt || (isInt && inputVal < 0)) {
+                        input.value = 0;
+                    } else {
+                        input.value = inputVal;
+                    }
+                } else //min 1 : time quantum, priority, process time
+                {
+                    if (!isInt || (isInt && inputVal < 1)) {
+                        input.value = 1;
+                    } else {
+                        input.value = inputVal;
+                    }
+                }
+            }
+        }
+    });
+}
+inputOnChange();
+let process = 1;
+//resize burst time rows size on +/-
+
+function gcd(x, y) {
+    while (y) {
+        let t = y;
+        y = x % y;
+        x = t;
+    }
+    return x;
+}
+
+function lcm(x, y) {
+    return (x * y) / gcd(x, y);
+}
+
+function lcmAll() {
+    let result = 1;
+    for (let i = 0; i < process; i++) {
+        result = lcm(result, document.querySelector(".main-table").rows[2 * i + 2].cells.length);
+    }
+    return result;
+}
+
+function updateColspan() { //update burst time cell colspan
+    let totalColumns = lcmAll();
+    let processHeading = document.querySelector("thead .process-time");
+    processHeading.setAttribute("colspan", totalColumns);
+    let processTimes = [];
+    let table = document.querySelector(".main-table");
+    for (let i = 0; i < process; i++) {
+        let row = table.rows[2 * i + 2].cells;
+        processTimes.push(row.length);
+    }
+    for (let i = 0; i < process; i++) {
+        let row1 = table.rows[2 * i + 1].cells;
+        let row2 = table.rows[2 * i + 2].cells;
+        for (let j = 0; j < processTimes[i]; j++) {
+            row1[j + 3].setAttribute("colspan", totalColumns / processTimes[i]);
+            row2[j].setAttribute("colspan", totalColumns / processTimes[i]);
+        }
+    }
+}
+
+function addremove() { //add remove bt-io time pair add event listener
+    let processTimes = [];
+    let table = document.querySelector(".main-table");
+    for (let i = 0; i < process; i++) {
+        let row = table.rows[2 * i + 2].cells;
+        processTimes.push(row.length);
+    }
+    let addbtns = document.querySelectorAll(".add-process-btn");
+    for (let i = 0; i < process; i++) {
+        addbtns[i].onclick = () => {
+            let table = document.querySelector(".main-table");
+            let row1 = table.rows[2 * i + 1];
+            let row2 = table.rows[2 * i + 2];
+            let newcell1 = row1.insertCell(processTimes[i] + 3);
+            newcell1.innerHTML = "IO";
+            newcell1.classList.add("process-time");
+            newcell1.classList.add("io");
+            newcell1.classList.add("process-heading");
+            let newcell2 = row2.insertCell(processTimes[i]);
+            newcell2.innerHTML = '<input type="number" min="1" step="1" value="1">';
+            newcell2.classList.add("process-time");
+            newcell2.classList.add("io");
+            newcell2.classList.add("process-input");
+            let newcell3 = row1.insertCell(processTimes[i] + 4);
+            newcell3.innerHTML = "CPU";
+            newcell3.classList.add("process-time");
+            newcell3.classList.add("cpu");
+            newcell3.classList.add("process-heading");
+            let newcell4 = row2.insertCell(processTimes[i] + 1);
+            newcell4.innerHTML = '<input type="number" min="1" step="1" value="1">';
+            newcell4.classList.add("process-time");
+            newcell4.classList.add("cpu");
+            newcell4.classList.add("process-input");
+            processTimes[i] += 2;
+            updateColspan();
+            inputOnChange();
+        };
+    }
+    let removebtns = document.querySelectorAll(".remove-process-btn");
+    for (let i = 0; i < process; i++) {
+        removebtns[i].onclick = () => {
+            if (processTimes[i] > 1) {
+                let table = document.querySelector(".main-table");
+                processTimes[i]--;
+                let row1 = table.rows[2 * i + 1];
+                row1.deleteCell(processTimes[i] + 3);
+                let row2 = table.rows[2 * i + 2];
+                row2.deleteCell(processTimes[i]);
+                processTimes[i]--;
+                table = document.querySelector(".main-table");
+                row1 = table.rows[2 * i + 1];
+                row1.deleteCell(processTimes[i] + 3);
+                row2 = table.rows[2 * i + 2];
+                row2.deleteCell(processTimes[i]);
+                updateColspan();
+            }
+        };
+    }
+}
+addremove();
+
+function addProcess() {
+    process++;
+    let rowHTML1 = `
+                          <td class="process-id" rowspan="2">P${process}</td>
+                          <td class="priority hide" rowspan="2"><input type="number" min="1" step="1" value="1"></td>
+                          <td class="arrival-time" rowspan="2"><input type="number" min="0" step="1" value="0"> </td>
+                          <td class="process-time cpu process-heading" colspan="">CPU</td>
+                          <td class="process-btn"><button type="button" class="add-process-btn">+</button></td>
+                          <td class="process-btn"><button type="button" class="remove-process-btn">-</button></td>
+                      `;
+    let rowHTML2 = `
+                           <td class="process-time cpu process-input"><input type="number" min="1" step="1" value="1"> </td>
+                      `;
+    let table = document.querySelector(".main-table tbody");
+    table.insertRow(table.rows.length).innerHTML = rowHTML1;
+    table.insertRow(table.rows.length).innerHTML = rowHTML2;
+    checkPriorityCell();
+    addremove();
+    updateColspan();
+    inputOnChange();
+}
+
+function deleteProcess() {
+    let table = document.querySelector(".main-table");
+    if (process > 1) {
+        table.deleteRow(table.rows.length - 1);
+        table.deleteRow(table.rows.length - 1);
+        process--;
+    }
+    updateColspan();
+    inputOnChange();
+}
+
+document.querySelector(".add-btn").onclick = () => { //add row event listener
+    addProcess();
+};
+document.querySelector(".remove-btn").onclick = () => { //remove row event listener
+    deleteProcess();
+};
+//------------------------
 class Input {
     constructor() {
         this.processId = [];
         this.priority = [];
         this.arrivalTime = [];
-        this.processTime = [];      // [[cpu, io, cpu, ...], ...]
+        this.processTime = [];
         this.processTimeLength = [];
         this.totalBurstTime = [];
         this.algorithm = "";
@@ -21,7 +224,6 @@ class Input {
         this.contextSwitch = 0;
     }
 }
-
 class Utility {
     constructor() {
         this.remainingProcessTime = [];
@@ -34,7 +236,6 @@ class Utility {
         this.currentTime = 0;
     }
 }
-
 class Output {
     constructor() {
         this.completionTime = [];
@@ -44,10 +245,9 @@ class Output {
         this.schedule = [];
         this.timeLog = [];
         this.contextSwitches = 0;
-        this.averageTimes = []; // [avgCT, avgTAT, avgWT, avgRT]
+        this.averageTimes = []; //ct,tat,wt,rt
     }
 }
-
 class TimeLog {
     constructor() {
         this.time = -1;
@@ -56,432 +256,676 @@ class TimeLog {
         this.running = [];
         this.block = [];
         this.terminate = [];
-        this.move = [];
+        this.move = []; //0-remain->ready 1-ready->running 2-running->terminate 3-running->ready 4-running->block 5-block->ready
     }
 }
-
-// ============================================================
-// SECTION 2: ALGORITHM INFO DATABASE
-// ============================================================
-
-const ALGORITHM_INFO = {
-    fcfs: {
-        name: "First Come First Serve (FCFS)",
-        desc: "The simplest scheduling algorithm. Processes are executed in the order they arrive in the ready queue. No preemption occurs — once a process starts, it runs to completion.",
-        complexity: "O(n log n)",
-        pros: "Simple, fair, no starvation",
-        cons: "Convoy effect, high average waiting time"
-    },
-    sjf: {
-        name: "Shortest Job First (SJF)",
-        desc: "Selects the process with the smallest total burst time from the ready queue. Non-preemptive — once a process starts, it completes before another is selected.",
-        complexity: "O(n log n)",
-        pros: "Minimum average waiting time (non-preemptive)",
-        cons: "Starvation of long processes, requires burst time prediction"
-    },
-    srtf: {
-        name: "Shortest Remaining Time First (SRTF)",
-        desc: "Preemptive version of SJF. If a new process arrives with a shorter remaining burst time than the currently running process, the CPU is preempted.",
-        complexity: "O(n² · T)",
-        pros: "Optimal average waiting time",
-        cons: "High overhead, starvation possible"
-    },
-    ljf: {
-        name: "Longest Job First (LJF)",
-        desc: "Opposite of SJF. Selects the process with the longest total burst time. Non-preemptive variant.",
-        complexity: "O(n log n)",
-        pros: "Large processes get priority",
-        cons: "High average waiting time, starvation of short processes"
-    },
-    lrtf: {
-        name: "Longest Remaining Time First (LRTF)",
-        desc: "Preemptive version of LJF. The process with the longest remaining burst time is always given the CPU.",
-        complexity: "O(n² · T)",
-        pros: "Large processes never starve",
-        cons: "Very high average waiting time"
-    },
-    rr: {
-        name: "Round Robin (RR)",
-        desc: "Each process gets a fixed time quantum. After the quantum expires, the process is preempted and moved to the back of the ready queue. Fair CPU sharing.",
-        complexity: "O(n · T/q)",
-        pros: "Fair, no starvation, good response time",
-        cons: "Performance depends on time quantum, higher context switch overhead"
-    },
-    pnp: {
-        name: "Priority (Non-Preemptive)",
-        desc: "Each process is assigned a priority. The process with the highest priority in the ready queue is selected next. Non-preemptive — runs to completion.",
-        complexity: "O(n log n)",
-        pros: "Important processes handled first",
-        cons: "Starvation of low-priority processes"
-    },
-    pp: {
-        name: "Priority (Preemptive)",
-        desc: "Preemptive version of priority scheduling. If a higher priority process arrives, it preempts the currently running process immediately.",
-        complexity: "O(n² · T)",
-        pros: "Most critical processes run first",
-        cons: "Starvation, high overhead"
-    },
-    hrrn: {
-        name: "Highest Response Ratio Next (HRRN)",
-        desc: "Non-preemptive algorithm that calculates response ratio = (W + S) / S for each process, where W is waiting time and S is burst time. Favors both short and long-waiting processes.",
-        complexity: "O(n²)",
-        pros: "No starvation, balances short and long jobs",
-        cons: "Overhead of computing response ratios"
-    }
-};
-
-// ============================================================
-// SECTION 3: PRESETS
-// ============================================================
-
-const PRESETS = [
-    {
-        name: "Textbook FCFS",
-        desc: "3 processes, staggered",
-        processes: [
-            { at: 0, bt: [4], priority: 1 },
-            { at: 1, bt: [3], priority: 1 },
-            { at: 2, bt: [1], priority: 1 }
-        ]
-    },
-    {
-        name: "SJF Classic",
-        desc: "4 processes at t=0",
-        processes: [
-            { at: 0, bt: [6], priority: 1 },
-            { at: 0, bt: [8], priority: 1 },
-            { at: 0, bt: [7], priority: 1 },
-            { at: 0, bt: [3], priority: 1 }
-        ]
-    },
-    {
-        name: "SRTF Preemption",
-        desc: "Demonstrates preemption",
-        processes: [
-            { at: 0, bt: [8], priority: 1 },
-            { at: 1, bt: [4], priority: 1 },
-            { at: 2, bt: [9], priority: 1 },
-            { at: 3, bt: [5], priority: 1 }
-        ]
-    },
-    {
-        name: "Round Robin Demo",
-        desc: "TQ=2, 4 processes",
-        processes: [
-            { at: 0, bt: [5], priority: 1 },
-            { at: 0, bt: [4], priority: 1 },
-            { at: 0, bt: [2], priority: 1 },
-            { at: 0, bt: [1], priority: 1 }
-        ],
-        timeQuantum: 2
-    },
-    {
-        name: "Priority Test",
-        desc: "3 processes, different priorities",
-        processes: [
-            { at: 0, bt: [4], priority: 2 },
-            { at: 0, bt: [3], priority: 1 },
-            { at: 0, bt: [5], priority: 3 }
-        ]
-    },
-    {
-        name: "I/O Burst",
-        desc: "CPU-IO-CPU pattern",
-        processes: [
-            { at: 0, bt: [3, 2, 2], priority: 1 },
-            { at: 1, bt: [2, 1, 3], priority: 1 },
-            { at: 2, bt: [4], priority: 1 }
-        ]
-    },
-    {
-        name: "Heavy Load",
-        desc: "6 processes, mixed arrivals",
-        processes: [
-            { at: 0, bt: [5], priority: 3 },
-            { at: 1, bt: [3], priority: 1 },
-            { at: 2, bt: [8], priority: 2 },
-            { at: 3, bt: [2], priority: 4 },
-            { at: 4, bt: [4], priority: 2 },
-            { at: 5, bt: [6], priority: 1 }
-        ]
-    },
-    {
-        name: "Context Switch",
-        desc: "CS=1, 3 processes",
-        processes: [
-            { at: 0, bt: [3], priority: 1 },
-            { at: 1, bt: [5], priority: 1 },
-            { at: 2, bt: [2], priority: 1 }
-        ],
-        contextSwitch: 1
-    }
-];
-
-// ============================================================
-// SECTION 4: STATE MANAGEMENT
-// ============================================================
-
-let processCount = 0;
-let priorityPreference = 1; // 1 = lower number is higher, -1 = higher number is higher
-
-function getSelectedAlgorithm() {
-    const checked = document.querySelector('input[name="algo"]:checked');
-    return checked ? checked.value : 'fcfs';
-}
-
-// ============================================================
-// SECTION 5: UI - PROCESS TABLE
-// ============================================================
-
-function createProcessRow(pid, arrivalTime = 0, burstTimes = [1], priority = 1) {
-    const tr = document.createElement('tr');
-    tr.dataset.pid = pid;
-
-    // Build burst cells
-    let burstHTML = '';
-    burstTimes.forEach((bt, idx) => {
-        const type = idx % 2 === 0 ? 'cpu' : 'io';
-        const label = idx % 2 === 0 ? 'CPU' : 'IO';
-        burstHTML += `
-            <div class="burst-cell">
-                <span class="burst-label ${type}">${label}</span>
-                <input type="number" min="1" step="1" value="${bt}" class="burst-input" data-type="${type}">
-            </div>`;
-    });
-
-    const algo = getSelectedAlgorithm();
-    const showPriority = algo === 'pnp' || algo === 'pp';
-
-    tr.innerHTML = `
-        <td class="pid-cell">P${pid}</td>
-        <td class="priority-col ${showPriority ? '' : 'hide'}">
-            <input type="number" min="1" step="1" value="${priority}" class="priority-input">
-        </td>
-        <td>
-            <input type="number" min="0" step="1" value="${arrivalTime}" class="arrival-input">
-        </td>
-        <td class="burst-times-cell">
-            ${burstHTML}
-        </td>
-        <td>
-            <div class="row-actions">
-                <button type="button" class="row-action-btn add-burst-btn" title="Add IO+CPU burst">+</button>
-                <button type="button" class="row-action-btn danger remove-burst-btn" title="Remove last burst pair">−</button>
-            </div>
-        </td>`;
-
-    // Add burst pair
-    tr.querySelector('.add-burst-btn').addEventListener('click', () => {
-        const cell = tr.querySelector('.burst-times-cell');
-        const ioDiv = document.createElement('div');
-        ioDiv.className = 'burst-cell';
-        ioDiv.innerHTML = `<span class="burst-label io">IO</span><input type="number" min="1" step="1" value="1" class="burst-input" data-type="io">`;
-        cell.appendChild(ioDiv);
-        const cpuDiv = document.createElement('div');
-        cpuDiv.className = 'burst-cell';
-        cpuDiv.innerHTML = `<span class="burst-label cpu">CPU</span><input type="number" min="1" step="1" value="1" class="burst-input" data-type="cpu">`;
-        cell.appendChild(cpuDiv);
-    });
-
-    // Remove burst pair
-    tr.querySelector('.remove-burst-btn').addEventListener('click', () => {
-        const cell = tr.querySelector('.burst-times-cell');
-        const children = cell.querySelectorAll('.burst-cell');
-        if (children.length > 1) {
-            children[children.length - 1].remove();
-            if (cell.querySelectorAll('.burst-cell').length > 1) {
-                cell.querySelectorAll('.burst-cell')[cell.querySelectorAll('.burst-cell').length - 1].remove();
-            }
-        }
-    });
-
-    return tr;
-}
-
-function addProcess(arrivalTime = 0, burstTimes = [1], priority = 1) {
-    processCount++;
-    const tbody = document.getElementById('process-table-body');
-    tbody.appendChild(createProcessRow(processCount, arrivalTime, burstTimes, priority));
-}
-
-function removeProcess() {
-    const tbody = document.getElementById('process-table-body');
-    if (tbody.children.length > 1) {
-        tbody.removeChild(tbody.lastElementChild);
-        processCount--;
-    }
-}
-
-function clearProcesses() {
-    processCount = 0;
-    document.getElementById('process-table-body').innerHTML = '';
-}
-
-function loadPreset(preset) {
-    clearProcesses();
-    preset.processes.forEach(p => {
-        addProcess(p.at, p.bt, p.priority || 1);
-    });
-    if (preset.timeQuantum) {
-        document.getElementById('tq').value = preset.timeQuantum;
-    }
-    if (preset.contextSwitch !== undefined) {
-        document.getElementById('context-switch').value = preset.contextSwitch;
-    }
-    showToast(`Loaded preset: ${preset.name}`, 'success');
-}
-
-// ============================================================
-// SECTION 6: UI - ALGORITHM PANEL & CONFIG
-// ============================================================
-
-function updateAlgoUI() {
-    const algo = getSelectedAlgorithm();
-
-    // Time quantum
-    const tqField = document.getElementById('tq-field');
-    if (algo === 'rr') {
-        tqField.classList.remove('hide');
-    } else {
-        tqField.classList.add('hide');
-    }
-
-    // Priority
-    const priorityContainer = document.getElementById('priority-container');
-    const priorityCols = document.querySelectorAll('.priority-col');
-    if (algo === 'pnp' || algo === 'pp') {
-        priorityContainer.classList.remove('hide');
-        priorityCols.forEach(el => el.classList.remove('hide'));
-    } else {
-        priorityContainer.classList.add('hide');
-        priorityCols.forEach(el => el.classList.add('hide'));
-    }
-
-    // Info panel
-    const info = ALGORITHM_INFO[algo];
-    const panel = document.getElementById('algo-info-panel');
-    document.getElementById('algo-info-title').textContent = info.name;
-    document.getElementById('algo-info-desc').textContent = info.desc;
-    document.getElementById('algo-info-complexity').textContent = `Time: ${info.complexity}`;
-    panel.classList.add('visible');
-}
-
-function initPresets() {
-    const grid = document.getElementById('presets-grid');
-    PRESETS.forEach(preset => {
-        const btn = document.createElement('button');
-        btn.className = 'preset-btn';
-        btn.innerHTML = `<span class="preset-name">${preset.name}</span><span class="preset-desc">${preset.desc}</span>`;
-        btn.addEventListener('click', () => loadPreset(preset));
-        grid.appendChild(btn);
-    });
-}
-
-// ============================================================
-// SECTION 7: INPUT COLLECTION & VALIDATION
-// ============================================================
 
 function setAlgorithmNameType(input, algorithm) {
     input.algorithm = algorithm;
     switch (algorithm) {
-        case 'fcfs': case 'sjf': case 'ljf': case 'pnp': case 'hrrn':
-            input.algorithmType = "nonpreemptive"; break;
-        case 'srtf': case 'lrtf': case 'pp':
-            input.algorithmType = "preemptive"; break;
+        case 'fcfs':
+        case 'sjf':
+        case 'ljf':
+        case 'pnp':
+        case 'hrrn':
+            input.algorithmType = "nonpreemptive";
+            break;
+        case 'srtf':
+        case 'lrtf':
+        case 'pp':
+            input.algorithmType = "preemptive";
+            break;
         case 'rr':
-            input.algorithmType = "roundrobin"; break;
+            input.algorithmType = "roundrobin";
+            break;
     }
 }
 
-function collectInput() {
-    const input = new Input();
-    const rows = document.querySelectorAll('#process-table-body tr');
-    let valid = true;
-
-    rows.forEach((row, i) => {
-        input.processId.push(i);
-        const at = Number(row.querySelector('.arrival-input').value);
-        const priorityInput = row.querySelector('.priority-input');
-        const pr = priorityInput ? Number(priorityInput.value) : 1;
-
-        if (isNaN(at) || at < 0) {
-            row.querySelector('.arrival-input').classList.add('invalid');
-            valid = false;
-        } else {
-            row.querySelector('.arrival-input').classList.remove('invalid');
+function setInput(input) {
+    for (let i = 1; i <= process; i++) {
+        input.processId.push(i - 1);
+        let rowCells1 = document.querySelector(".main-table").rows[2 * i - 1].cells;
+        let rowCells2 = document.querySelector(".main-table").rows[2 * i].cells;
+        input.priority.push(Number(rowCells1[1].firstElementChild.value));
+        input.arrivalTime.push(Number(rowCells1[2].firstElementChild.value));
+        let ptn = Number(rowCells2.length);
+        let pta = [];
+        for (let j = 0; j < ptn; j++) {
+            pta.push(Number(rowCells2[j].firstElementChild.value));
         }
-
-        input.arrivalTime.push(Math.max(0, Math.round(at)));
-        input.priority.push(Math.max(1, Math.round(pr)));
-
-        const burstInputs = row.querySelectorAll('.burst-input');
-        const pt = [];
-        burstInputs.forEach(bi => {
-            const val = Number(bi.value);
-            if (isNaN(val) || val < 1) {
-                bi.classList.add('invalid');
-                valid = false;
-            } else {
-                bi.classList.remove('invalid');
-            }
-            pt.push(Math.max(1, Math.round(val)));
-        });
-        input.processTime.push(pt);
-        input.processTimeLength.push(pt.length);
-    });
-
-    if (!valid) {
-        showToast('Please fix invalid input values (highlighted in red)', 'error');
-        return null;
+        input.processTime.push(pta);
+        input.processTimeLength.push(ptn);
     }
-
-    // total burst time
-    const n = input.processId.length;
-    input.totalBurstTime = new Array(n).fill(0);
+    //total burst time for each process
+    input.totalBurstTime = new Array(process).fill(0);
     input.processTime.forEach((e1, i) => {
         e1.forEach((e2, j) => {
-            if (j % 2 === 0) {
+            if (j % 2 == 0) {
                 input.totalBurstTime[i] += e2;
             }
         });
     });
-
-    setAlgorithmNameType(input, getSelectedAlgorithm());
-    input.contextSwitch = Math.max(0, Math.round(Number(document.getElementById('context-switch').value)));
-    input.timeQuantum = Math.max(1, Math.round(Number(document.getElementById('tq').value)));
-    return input;
+    setAlgorithmNameType(input, selectedAlgorithm.value);
+    input.contextSwitch = Number(document.querySelector("#context-switch").value);
+    input.timeQuantum = Number(document.querySelector("#tq").value);
 }
 
 function setUtility(input, utility) {
-    const n = input.processId.length;
-    // BUGFIX: Deep copy processTime arrays
-    utility.remainingProcessTime = input.processTime.map(arr => [...arr]);
+    utility.remainingProcessTime = input.processTime.slice();
     utility.remainingBurstTime = input.totalBurstTime.slice();
-    utility.remainingTimeRunning = new Array(n).fill(0);
-    utility.currentProcessIndex = new Array(n).fill(0);
-    utility.start = new Array(n).fill(false);
-    utility.done = new Array(n).fill(false);
+    utility.remainingTimeRunning = new Array(process).fill(0);
+    utility.currentProcessIndex = new Array(process).fill(0);
+    utility.start = new Array(process).fill(false);
+    utility.done = new Array(process).fill(false);
     utility.returnTime = input.arrivalTime.slice();
 }
 
-// ============================================================
-// SECTION 8: CPU SCHEDULER (CORE LOGIC WITH BUG FIXES)
-// ============================================================
+function reduceSchedule(schedule) {
+    let newSchedule = [];
+    let currentScheduleElement = schedule[0][0];
+    let currentScheduleLength = schedule[0][1];
+    for (let i = 1; i < schedule.length; i++) {
+        if (schedule[i][0] == currentScheduleElement) {
+            currentScheduleLength += schedule[i][1];
+        } else {
+            newSchedule.push([currentScheduleElement, currentScheduleLength]);
+            currentScheduleElement = schedule[i][0];
+            currentScheduleLength = schedule[i][1];
+        }
+    }
+    newSchedule.push([currentScheduleElement, currentScheduleLength]);
+    return newSchedule;
+}
+
+function reduceTimeLog(timeLog) {
+    let timeLogLength = timeLog.length;
+    let newTimeLog = [],
+        j = 0;
+    for (let i = 0; i < timeLogLength - 1; i++) {
+        if (timeLog[i] != timeLog[i + 1]) {
+            newTimeLog.push(timeLog[j]);
+        }
+        j = i + 1;
+    }
+    if (j == timeLogLength - 1) {
+        newTimeLog.push(timeLog[j]);
+    }
+    return newTimeLog;
+}
+
+function outputAverageTimes(output) {
+    let avgct = 0;
+    output.completionTime.forEach((element) => {
+        avgct += element;
+    });
+    avgct /= process;
+    let avgtat = 0;
+    output.turnAroundTime.forEach((element) => {
+        avgtat += element;
+    });
+    avgtat /= process;
+    let avgwt = 0;
+    output.waitingTime.forEach((element) => {
+        avgwt += element;
+    });
+    avgwt /= process;
+    let avgrt = 0;
+    output.responseTime.forEach((element) => {
+        avgrt += element;
+    });
+    avgrt /= process;
+    return [avgct, avgtat, avgwt, avgrt];
+}
+
+function setOutput(input, output) {
+    //set turn around time and waiting time
+    for (let i = 0; i < process; i++) {
+        output.turnAroundTime[i] = output.completionTime[i] - input.arrivalTime[i];
+        output.waitingTime[i] = output.turnAroundTime[i] - input.totalBurstTime[i];
+    }
+    output.schedule = reduceSchedule(output.schedule);
+    output.timeLog = reduceTimeLog(output.timeLog);
+    output.averageTimes = outputAverageTimes(output);
+}
+
+function getDate(sec) {
+    return (new Date(0, 0, 0, 0, sec / 60, sec % 60));
+}
+
+function showGanttChart(output, outputDiv) {
+    let ganttChartHeading = document.createElement("h3");
+    ganttChartHeading.innerHTML = "Gantt Chart";
+    outputDiv.appendChild(ganttChartHeading);
+    let ganttChartData = [];
+    let startGantt = 0;
+    output.schedule.forEach((element) => {
+        if (element[0] == -2) { //context switch
+            ganttChartData.push([
+                "Time",
+                "CS",
+                "grey",
+                getDate(startGantt),
+                getDate(startGantt + element[1])
+            ]);
+
+        } else if (element[0] == -1) { //nothing
+            ganttChartData.push([
+                "Time",
+                "Empty",
+                "black",
+                getDate(startGantt),
+                getDate(startGantt + element[1])
+            ]);
+
+        } else { //process 
+            ganttChartData.push([
+                "Time",
+                "P" + element[0],
+                "",
+                getDate(startGantt),
+                getDate(startGantt + element[1])
+            ]);
+        }
+        startGantt += element[1];
+    });
+    let ganttChart = document.createElement("div");
+    ganttChart.id = "gantt-chart";
+
+    google.charts.load("current", { packages: ["timeline"] });
+    google.charts.setOnLoadCallback(drawGanttChart);
+
+    function drawGanttChart() {
+        var container = document.getElementById("gantt-chart");
+        var chart = new google.visualization.Timeline(container);
+        var dataTable = new google.visualization.DataTable();
+
+        dataTable.addColumn({ type: "string", id: "Gantt Chart" });
+        dataTable.addColumn({ type: "string", id: "Process" });
+        dataTable.addColumn({ type: 'string', id: 'style', role: 'style' });
+        dataTable.addColumn({ type: "date", id: "Start" });
+        dataTable.addColumn({ type: "date", id: "End" });
+        dataTable.addRows(ganttChartData);
+        let ganttWidth = '100%';
+        if (startGantt >= 20) {
+            ganttWidth = 0.05 * startGantt * screen.availWidth;
+        }
+        var options = {
+            width: ganttWidth,
+            timeline: {
+                showRowLabels: false,
+                avoidOverlappingGridLines: false
+            }
+        };
+        chart.draw(dataTable, options);
+    }
+    outputDiv.appendChild(ganttChart);
+}
+
+function showTimelineChart(output, outputDiv) {
+    let timelineChartHeading = document.createElement("h3");
+    timelineChartHeading.innerHTML = "Timeline Chart";
+    outputDiv.appendChild(timelineChartHeading);
+    let timelineChartData = [];
+    let startTimeline = 0;
+    output.schedule.forEach((element) => {
+        if (element[0] >= 0) { //process 
+            timelineChartData.push([
+                "P" + element[0],
+                getDate(startTimeline),
+                getDate(startTimeline + element[1])
+            ]);
+        }
+        startTimeline += element[1];
+    });
+    timelineChartData.sort((a, b) => parseInt(a[0].substring(1, a[0].length)) - parseInt(b[0].substring(1, b[0].length)));
+    let timelineChart = document.createElement("div");
+    timelineChart.id = "timeline-chart";
+
+    google.charts.load("current", { packages: ["timeline"] });
+    google.charts.setOnLoadCallback(drawTimelineChart);
+
+    function drawTimelineChart() {
+        var container = document.getElementById("timeline-chart");
+        var chart = new google.visualization.Timeline(container);
+        var dataTable = new google.visualization.DataTable();
+
+        dataTable.addColumn({ type: "string", id: "Process" });
+        dataTable.addColumn({ type: "date", id: "Start" });
+        dataTable.addColumn({ type: "date", id: "End" });
+        dataTable.addRows(timelineChartData);
+
+        let timelineWidth = '100%';
+        if (startTimeline >= 20) {
+            timelineWidth = 0.05 * startTimeline * screen.availWidth;
+        }
+        var options = {
+            width: timelineWidth,
+        };
+        chart.draw(dataTable, options);
+    }
+    outputDiv.appendChild(timelineChart);
+}
+
+function showFinalTable(input, output, outputDiv) {
+    let finalTableHeading = document.createElement("h3");
+    finalTableHeading.innerHTML = "Final Table";
+    outputDiv.appendChild(finalTableHeading);
+    let table = document.createElement("table");
+    table.classList.add("final-table");
+    let thead = table.createTHead();
+    let row = thead.insertRow(0);
+    let headings = [
+        "Process",
+        "Arrival Time",
+        "Total Burst Time",
+        "Completion Time",
+        "Turn Around Time",
+        "Waiting Time",
+        "Response Time",
+    ];
+    headings.forEach((element, index) => {
+        let cell = row.insertCell(index);
+        cell.innerHTML = element;
+    });
+    let tbody = table.createTBody();
+    for (let i = 0; i < process; i++) {
+        let row = tbody.insertRow(i);
+        let cell = row.insertCell(0);
+        cell.innerHTML = "P" + (i + 1);
+        cell = row.insertCell(1);
+        cell.innerHTML = input.arrivalTime[i];
+        cell = row.insertCell(2);
+        cell.innerHTML = input.totalBurstTime[i];
+        cell = row.insertCell(3);
+        cell.innerHTML = output.completionTime[i];
+        cell = row.insertCell(4);
+        cell.innerHTML = output.turnAroundTime[i];
+        cell = row.insertCell(5);
+        cell.innerHTML = output.waitingTime[i];
+        cell = row.insertCell(6);
+        cell.innerHTML = output.responseTime[i];
+    }
+    outputDiv.appendChild(table);
+
+    let tbt = 0;
+    input.totalBurstTime.forEach((element) => (tbt += element));
+    let lastct = 0;
+    output.completionTime.forEach((element) => (lastct = Math.max(lastct, element)));
+
+    let cpu = document.createElement("p");
+    cpu.innerHTML = "CPU Utilization : " + (tbt / lastct) * 100 + "%";
+    outputDiv.appendChild(cpu);
+
+    let tp = document.createElement("p");
+    tp.innerHTML = "Throughput : " + process / lastct;
+    outputDiv.appendChild(tp);
+    if (input.contextSwitch > 0) {
+
+        let cs = document.createElement("p");
+        cs.innerHTML = "Number of Context Switches : " + (output.contextSwitches - 1);
+        outputDiv.appendChild(cs);
+    }
+}
+
+function toggleTimeLogArrowColor(timeLog, color) {
+    let timeLogMove = ['remain-ready', 'ready-running', 'running-terminate', 'running-ready', 'running-block', 'block-ready'];
+    timeLog.move.forEach(element => {
+        document.getElementById(timeLogMove[element]).style.color = color;
+    });
+}
+
+function nextTimeLog(timeLog) {
+    let timeLogTableDiv = document.getElementById("time-log-table-div");
+
+    let arrowHTML = `
+    <p id = "remain-ready" class = "arrow">&rarr;</p>
+    <p id = "ready-running" class = "arrow">&#10554;</p>
+    <p id = "running-ready" class = "arrow">&#10554;</p>
+    <p id = "running-terminate" class = "arrow">&rarr;</p>
+    <p id = "running-block" class = "arrow">&rarr;</p>
+    <p id = "block-ready" class = "arrow">&rarr;</p>
+    `;
+    timeLogTableDiv.innerHTML = arrowHTML;
+
+    let remainTable = document.createElement("table");
+    remainTable.id = "remain-table";
+    remainTable.className = 'time-log-table';
+    let remainTableHead = remainTable.createTHead();
+    let remainTableHeadRow = remainTableHead.insertRow(0);
+    let remainTableHeading = remainTableHeadRow.insertCell(0);
+    remainTableHeading.innerHTML = "Remain";
+    let remainTableBody = remainTable.createTBody();
+    for (let i = 0; i < timeLog.remain.length; i++) {
+        let remainTableBodyRow = remainTableBody.insertRow(i);
+        let remainTableValue = remainTableBodyRow.insertCell(0);
+        remainTableValue.innerHTML = 'P' + (timeLog.remain[i] + 1);
+    }
+    timeLogTableDiv.appendChild(remainTable);
+
+    let readyTable = document.createElement("table");
+    readyTable.id = "ready-table";
+    readyTable.className = 'time-log-table';
+    let readyTableHead = readyTable.createTHead();
+    let readyTableHeadRow = readyTableHead.insertRow(0);
+    let readyTableHeading = readyTableHeadRow.insertCell(0);
+    readyTableHeading.innerHTML = "Ready";
+    let readyTableBody = readyTable.createTBody();
+    for (let i = 0; i < timeLog.ready.length; i++) {
+        let readyTableBodyRow = readyTableBody.insertRow(i);
+        let readyTableValue = readyTableBodyRow.insertCell(0);
+        readyTableValue.innerHTML = 'P' + (timeLog.ready[i] + 1);
+    }
+    timeLogTableDiv.appendChild(readyTable);
+
+    let runningTable = document.createElement("table");
+    runningTable.id = "running-table";
+    runningTable.className = 'time-log-table';
+    let runningTableHead = runningTable.createTHead();
+    let runningTableHeadRow = runningTableHead.insertRow(0);
+    let runningTableHeading = runningTableHeadRow.insertCell(0);
+    runningTableHeading.innerHTML = "Running";
+    let runningTableBody = runningTable.createTBody();
+    for (let i = 0; i < timeLog.running.length; i++) {
+        let runningTableBodyRow = runningTableBody.insertRow(i);
+        let runningTableValue = runningTableBodyRow.insertCell(0);
+        runningTableValue.innerHTML = 'P' + (timeLog.running[i] + 1);
+    }
+    timeLogTableDiv.appendChild(runningTable);
+
+    let blockTable = document.createElement("table");
+    blockTable.id = "block-table";
+    blockTable.className = 'time-log-table';
+    let blockTableHead = blockTable.createTHead();
+    let blockTableHeadRow = blockTableHead.insertRow(0);
+    let blockTableHeading = blockTableHeadRow.insertCell(0);
+    blockTableHeading.innerHTML = "Block";
+    let blockTableBody = blockTable.createTBody();
+    for (let i = 0; i < timeLog.block.length; i++) {
+        let blockTableBodyRow = blockTableBody.insertRow(i);
+        let blockTableValue = blockTableBodyRow.insertCell(0);
+        blockTableValue.innerHTML = 'P' + (timeLog.block[i] + 1);
+    }
+    timeLogTableDiv.appendChild(blockTable);
+
+    let terminateTable = document.createElement("table");
+    terminateTable.id = "terminate-table";
+    terminateTable.className = 'time-log-table';
+    let terminateTableHead = terminateTable.createTHead();
+    let terminateTableHeadRow = terminateTableHead.insertRow(0);
+    let terminateTableHeading = terminateTableHeadRow.insertCell(0);
+    terminateTableHeading.innerHTML = "Terminate";
+    let terminateTableBody = terminateTable.createTBody();
+    for (let i = 0; i < timeLog.terminate.length; i++) {
+        let terminateTableBodyRow = terminateTableBody.insertRow(i);
+        let terminateTableValue = terminateTableBodyRow.insertCell(0);
+        terminateTableValue.innerHTML = 'P' + (timeLog.terminate[i] + 1);
+    }
+    timeLogTableDiv.appendChild(terminateTable);
+    document.getElementById("time-log-time").innerHTML = "Time : " + timeLog.time;
+}
+
+function showTimeLog(output, outputDiv) {
+    reduceTimeLog(output.timeLog);
+    let timeLogDiv = document.createElement("div");
+    timeLogDiv.id = "time-log-div";
+    timeLogDiv.style.height = (15 * process) + 300 + "px";
+    let startTimeLogButton = document.createElement("button");
+    startTimeLogButton.id = "start-time-log";
+    startTimeLogButton.innerHTML = "Start Time Log";
+    timeLogDiv.appendChild(startTimeLogButton);
+    outputDiv.appendChild(timeLogDiv);
+
+    document.querySelector("#start-time-log").onclick = () => {
+        timeLogStart = 1;
+        let timeLogDiv = document.getElementById("time-log-div");
+        let timeLogOutputDiv = document.createElement("div");
+        timeLogOutputDiv.id = "time-log-output-div";
+
+        let timeLogTableDiv = document.createElement("div");
+        timeLogTableDiv.id = "time-log-table-div";
+
+        let timeLogTime = document.createElement("p");
+        timeLogTime.id = "time-log-time";
+
+        timeLogOutputDiv.appendChild(timeLogTableDiv);
+        timeLogOutputDiv.appendChild(timeLogTime);
+        timeLogDiv.appendChild(timeLogOutputDiv);
+        let index = 0;
+        let timeLogInterval = setInterval(() => {
+            nextTimeLog(output.timeLog[index]);
+            if (index != output.timeLog.length - 1) {
+                setTimeout(() => {
+                    toggleTimeLogArrowColor(output.timeLog[index], 'red');
+                    setTimeout(() => {
+                        toggleTimeLogArrowColor(output.timeLog[index], 'black');
+                    }, 600);
+                }, 200);
+            }
+            index++;
+            if (index == output.timeLog.length) {
+                clearInterval(timeLogInterval);
+            }
+            document.getElementById("calculate").onclick = () => {
+                clearInterval(timeLogInterval);
+                document.getElementById("time-log-output-div").innerHTML = "";
+                calculateOutput();
+            }
+        }, 1000);
+    };
+}
+
+function showRoundRobinChart(outputDiv) {
+    let roundRobinInput = new Input();
+    setInput(roundRobinInput);
+    let maxTimeQuantum = 0;
+    roundRobinInput.processTime.forEach(processTimeArray => {
+        processTimeArray.forEach((time, index) => {
+            if (index % 2 == 0) {
+                maxTimeQuantum = Math.max(maxTimeQuantum, time);
+            }
+        });
+    });
+    let roundRobinChartData = [
+        [],
+        [],
+        [],
+        [],
+        []
+    ];
+    let timeQuantumArray = [];
+    for (let timeQuantum = 1; timeQuantum <= maxTimeQuantum; timeQuantum++) {
+        timeQuantumArray.push(timeQuantum);
+        let roundRobinInput = new Input();
+        setInput(roundRobinInput);
+        setAlgorithmNameType(roundRobinInput, 'rr');
+        roundRobinInput.timeQuantum = timeQuantum;
+        let roundRobinUtility = new Utility();
+        setUtility(roundRobinInput, roundRobinUtility);
+        let roundRobinOutput = new Output();
+        CPUScheduler(roundRobinInput, roundRobinUtility, roundRobinOutput);
+        setOutput(roundRobinInput, roundRobinOutput);
+        for (let i = 0; i < 4; i++) {
+            roundRobinChartData[i].push(roundRobinOutput.averageTimes[i]);
+        }
+        roundRobinChartData[4].push(roundRobinOutput.contextSwitches);
+    }
+    let roundRobinChartCanvas = document.createElement('canvas');
+    roundRobinChartCanvas.id = "round-robin-chart";
+    let roundRobinChartDiv = document.createElement('div');
+    roundRobinChartDiv.id = "round-robin-chart-div";
+    roundRobinChartDiv.appendChild(roundRobinChartCanvas);
+    outputDiv.appendChild(roundRobinChartDiv);
+
+    new Chart(document.getElementById('round-robin-chart'), {
+        type: 'line',
+        data: {
+            labels: timeQuantumArray,
+            datasets: [{
+                    label: "Completion Time",
+                    borderColor: '#3366CC',
+                    data: roundRobinChartData[0]
+                },
+                {
+                    label: "Turn Around Time",
+                    borderColor: '#DC3912',
+                    data: roundRobinChartData[1]
+                },
+                {
+                    label: "Waiting Time",
+                    borderColor: '#FF9900',
+                    data: roundRobinChartData[2]
+                },
+                {
+                    label: "Response Time",
+                    borderColor: '#109618',
+                    data: roundRobinChartData[3]
+                },
+                {
+                    label: "Context Switches",
+                    borderColor: '#990099',
+                    data: roundRobinChartData[4]
+                },
+            ]
+        },
+        options: {
+            title: {
+                display: true,
+                text: ['Round Robin', 'Comparison of Completion, Turn Around, Waiting, Response Time and Context Switches', 'The Lower The Better']
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }],
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Time Quantum'
+                    }
+                }]
+            },
+            legend: {
+                display: true,
+                labels: {
+                    fontColor: 'black'
+                }
+            }
+        }
+    });
+}
+
+
+function showAlgorithmChart(outputDiv) {
+    let algorithmArray = ["fcfs", "sjf", "srtf", "ljf", "lrtf", "rr", "hrrn", "pnp", "pp"];
+    let algorithmNameArray = ["FCFS", "SJF", "SRTF", "LJF", "LRTF", "RR", "HRRN", "PNP", "PP"];
+    let algorithmChartData = [
+        [],
+        [],
+        [],
+        []
+    ];
+    algorithmArray.forEach(currentAlgorithm => {
+        let chartInput = new Input();
+        let chartUtility = new Utility();
+        let chartOutput = new Output();
+        setInput(chartInput);
+        setAlgorithmNameType(chartInput, currentAlgorithm);
+        setUtility(chartInput, chartUtility);
+        CPUScheduler(chartInput, chartUtility, chartOutput);
+        setOutput(chartInput, chartOutput);
+        for (let i = 0; i < 4; i++) {
+            algorithmChartData[i].push(chartOutput.averageTimes[i]);
+        }
+    });
+    let algorithmChartCanvas = document.createElement('canvas');
+    algorithmChartCanvas.id = "algorithm-chart";
+    let algorithmChartDiv = document.createElement('div');
+    algorithmChartDiv.id = "algorithm-chart-div";
+    algorithmChartDiv.style.height = "40vh";
+    algorithmChartDiv.style.width = "80%";
+    algorithmChartDiv.appendChild(algorithmChartCanvas);
+    outputDiv.appendChild(algorithmChartDiv);
+    new Chart(document.getElementById('algorithm-chart'), {
+        type: 'bar',
+        data: {
+            labels: algorithmNameArray,
+            datasets: [{
+                    label: "Completion Time",
+                    backgroundColor: '#3366CC',
+                    data: algorithmChartData[0]
+                },
+                {
+                    label: "Turn Around Time",
+                    backgroundColor: '#DC3912',
+                    data: algorithmChartData[1]
+                },
+                {
+                    label: "Waiting Time",
+                    backgroundColor: '#FF9900',
+                    data: algorithmChartData[2]
+                },
+                {
+                    label: "Response Time",
+                    backgroundColor: '#109618',
+                    data: algorithmChartData[3]
+                }
+            ]
+        },
+        options: {
+            title: {
+                display: true,
+                text: ['Algorithm', 'Comparison of Completion, Turn Around, Waiting and Response Time', 'The Lower The Better']
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }],
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Algorithms'
+                    }
+                }]
+            },
+            legend: {
+                display: true,
+                labels: {
+                    fontColor: 'black'
+                }
+            }
+        }
+    });
+}
+
+function showOutput(input, output, outputDiv) {
+    showGanttChart(output, outputDiv);
+    outputDiv.insertAdjacentHTML("beforeend", "<hr>");
+    showTimelineChart(output, outputDiv);
+    outputDiv.insertAdjacentHTML("beforeend", "<hr>");
+    showFinalTable(input, output, outputDiv);
+    outputDiv.insertAdjacentHTML("beforeend", "<hr>");
+    showTimeLog(output, outputDiv);
+    outputDiv.insertAdjacentHTML("beforeend", "<hr>");
+    if (selectedAlgorithm.value == "rr") {
+        showRoundRobinChart(outputDiv);
+        outputDiv.insertAdjacentHTML("beforeend", "<hr>");
+    }
+    showAlgorithmChart(outputDiv);
+}
 
 function CPUScheduler(input, utility, output) {
-    const n = input.processId.length;
-
-    function moveElement(value, from, to) {
-        let index = from.indexOf(value);
-        if (index !== -1) from.splice(index, 1);
-        if (to.indexOf(value) === -1) to.push(value);
-    }
-
     function updateReadyQueue(currentTimeLog) {
-        let candidatesRemain = currentTimeLog.remain.filter(e => input.arrivalTime[e] <= currentTimeLog.time);
-        let candidatesBlock = currentTimeLog.block.filter(e => utility.returnTime[e] <= currentTimeLog.time);
-        if (candidatesRemain.length > 0) currentTimeLog.move.push(0);
-        if (candidatesBlock.length > 0) currentTimeLog.move.push(5);
+        let candidatesRemain = currentTimeLog.remain.filter((element) => input.arrivalTime[element] <= currentTimeLog.time);
+        if (candidatesRemain.length > 0) {
+            currentTimeLog.move.push(0);
+        }
+        let candidatesBlock = currentTimeLog.block.filter((element) => utility.returnTime[element] <= currentTimeLog.time);
+        if (candidatesBlock.length > 0) {
+            currentTimeLog.move.push(5);
+        }
         let candidates = candidatesRemain.concat(candidatesBlock);
         candidates.sort((a, b) => utility.returnTime[a] - utility.returnTime[b]);
         candidates.forEach(element => {
@@ -492,97 +936,87 @@ function CPUScheduler(input, utility, output) {
         currentTimeLog.move = [];
     }
 
+    function moveElement(value, from, to) { //if present in from and not in to
+        let index = from.indexOf(value);
+        if (index != -1) {
+            from.splice(index, 1);
+        }
+        if (to.indexOf(value) == -1) {
+            to.push(value);
+        }
+    }
     let currentTimeLog = new TimeLog();
-    // BUGFIX: Copy processId array instead of referencing
-    currentTimeLog.remain = input.processId.slice();
+    currentTimeLog.remain = input.processId;
     output.timeLog.push(JSON.parse(JSON.stringify(currentTimeLog)));
     currentTimeLog.move = [];
     currentTimeLog.time++;
     let lastFound = -1;
-
-    // Safety: prevent infinite loop
-    let maxIterations = 100000;
-    let iter = 0;
-
-    while (utility.done.some(e => e === false)) {
-        if (++iter > maxIterations) {
-            console.error("Scheduler exceeded maximum iterations — aborting.");
-            break;
-        }
-
+    while (utility.done.some((element) => element == false)) {
         updateReadyQueue(currentTimeLog);
         let found = -1;
-
-        if (currentTimeLog.running.length === 1) {
+        if (currentTimeLog.running.length == 1) {
             found = currentTimeLog.running[0];
         } else if (currentTimeLog.ready.length > 0) {
-            if (input.algorithm === 'rr') {
+            if (input.algorithm == 'rr') {
                 found = currentTimeLog.ready[0];
-                utility.remainingTimeRunning[found] = Math.min(
-                    utility.remainingProcessTime[found][utility.currentProcessIndex[found]],
-                    input.timeQuantum
-                );
+                utility.remainingTimeRunning[found] = Math.min(utility.remainingProcessTime[found][utility.currentProcessIndex[found]], input.timeQuantum);
             } else {
-                // BUGFIX: Don't sort the actual ready queue — copy it
-                let candidates = [...currentTimeLog.ready];
-                candidates.sort((a, b) => a - b); // Tiebreak by PID
+                let candidates = currentTimeLog.ready;
+                candidates.sort((a, b) => a - b);
                 candidates.sort((a, b) => {
                     switch (input.algorithm) {
                         case 'fcfs':
                             return utility.returnTime[a] - utility.returnTime[b];
-                        case 'sjf': case 'srtf':
+                        case 'sjf':
+                        case 'srtf':
                             return utility.remainingBurstTime[a] - utility.remainingBurstTime[b];
-                        case 'ljf': case 'lrtf':
+                        case 'ljf':
+                        case 'lrtf':
                             return utility.remainingBurstTime[b] - utility.remainingBurstTime[a];
-                        case 'pnp': case 'pp':
+                        case 'pnp':
+                        case 'pp':
                             return priorityPreference * (input.priority[a] - input.priority[b]);
-                        case 'hrrn': {
-                            // BUGFIX: Use total burst time for response ratio
-                            const responseRatio = (id) => {
-                                let s = input.totalBurstTime[id];
-                                let w = currentTimeLog.time - input.arrivalTime[id];
-                                return (w + s) / s;
-                            };
+                        case 'hrrn':
+                            function responseRatio(id) {
+                                let s = utility.remainingBurstTime[id];
+                                let w = currentTimeLog.time - input.arrivalTime[id] - s;
+                                return 1 + w / s;
+                            }
                             return responseRatio(b) - responseRatio(a);
-                        }
                     }
                 });
                 found = candidates[0];
-
-                // Context switch for preemptive when process changes
-                if (input.algorithmType === "preemptive" && found >= 0 && lastFound >= 0 && found !== lastFound) {
+                if (input.algorithmType == "preemptive" && found >= 0 && lastFound >= 0 && found != lastFound) { //context switch
                     output.schedule.push([-2, input.contextSwitch]);
                     for (let i = 0; i < input.contextSwitch; i++, currentTimeLog.time++) {
                         updateReadyQueue(currentTimeLog);
                     }
-                    if (input.contextSwitch > 0) output.contextSwitches++;
+                    if (input.contextSwitch > 0) {
+                        output.contextSwitches++;
+                    }
                 }
             }
-
             moveElement(found, currentTimeLog.ready, currentTimeLog.running);
             currentTimeLog.move.push(1);
             output.timeLog.push(JSON.parse(JSON.stringify(currentTimeLog)));
             currentTimeLog.move = [];
-
-            if (utility.start[found] === false) {
+            if (utility.start[found] == false) {
                 utility.start[found] = true;
                 output.responseTime[found] = currentTimeLog.time - input.arrivalTime[found];
             }
         }
-
         currentTimeLog.time++;
-
-        if (found !== -1) {
+        if (found != -1) {
             output.schedule.push([found + 1, 1]);
             utility.remainingProcessTime[found][utility.currentProcessIndex[found]]--;
             utility.remainingBurstTime[found]--;
 
-            if (input.algorithm === 'rr') {
+            if (input.algorithm == 'rr') {
                 utility.remainingTimeRunning[found]--;
-                if (utility.remainingTimeRunning[found] === 0) {
-                    if (utility.remainingProcessTime[found][utility.currentProcessIndex[found]] === 0) {
+                if (utility.remainingTimeRunning[found] == 0) {
+                    if (utility.remainingProcessTime[found][utility.currentProcessIndex[found]] == 0) {
                         utility.currentProcessIndex[found]++;
-                        if (utility.currentProcessIndex[found] === input.processTimeLength[found]) {
+                        if (utility.currentProcessIndex[found] == input.processTimeLength[found]) {
                             utility.done[found] = true;
                             output.completionTime[found] = currentTimeLog.time;
                             moveElement(found, currentTimeLog.running, currentTimeLog.terminate);
@@ -607,12 +1041,14 @@ function CPUScheduler(input, utility, output) {
                     for (let i = 0; i < input.contextSwitch; i++, currentTimeLog.time++) {
                         updateReadyQueue(currentTimeLog);
                     }
-                    if (input.contextSwitch > 0) output.contextSwitches++;
+                    if (input.contextSwitch > 0) {
+                        output.contextSwitches++;
+                    }
                 }
-            } else {
-                if (utility.remainingProcessTime[found][utility.currentProcessIndex[found]] === 0) {
+            } else { //preemptive and non-preemptive
+                if (utility.remainingProcessTime[found][utility.currentProcessIndex[found]] == 0) {
                     utility.currentProcessIndex[found]++;
-                    if (utility.currentProcessIndex[found] === input.processTimeLength[found]) {
+                    if (utility.currentProcessIndex[found] == input.processTimeLength[found]) {
                         utility.done[found] = true;
                         output.completionTime[found] = currentTimeLog.time;
                         moveElement(found, currentTimeLog.running, currentTimeLog.terminate);
@@ -625,15 +1061,17 @@ function CPUScheduler(input, utility, output) {
                     }
                     output.timeLog.push(JSON.parse(JSON.stringify(currentTimeLog)));
                     currentTimeLog.move = [];
-                    if (currentTimeLog.running.length === 0) {
+                    if (currentTimeLog.running.length == 0) { //context switch
                         output.schedule.push([-2, input.contextSwitch]);
                         for (let i = 0; i < input.contextSwitch; i++, currentTimeLog.time++) {
                             updateReadyQueue(currentTimeLog);
                         }
-                        if (input.contextSwitch > 0) output.contextSwitches++;
+                        if (input.contextSwitch > 0) {
+                            output.contextSwitches++;
+                        }
                     }
                     lastFound = -1;
-                } else if (input.algorithmType === "preemptive") {
+                } else if (input.algorithmType == "preemptive") {
                     moveElement(found, currentTimeLog.running, currentTimeLog.ready);
                     currentTimeLog.move.push(3);
                     output.timeLog.push(JSON.parse(JSON.stringify(currentTimeLog)));
@@ -647,665 +1085,22 @@ function CPUScheduler(input, utility, output) {
         }
         output.timeLog.push(JSON.parse(JSON.stringify(currentTimeLog)));
     }
-    if (output.schedule.length > 0) output.schedule.pop();
+    output.schedule.pop();
 }
-
-// ============================================================
-// SECTION 9: OUTPUT PROCESSING
-// ============================================================
-
-function reduceSchedule(schedule) {
-    if (!schedule || schedule.length === 0) return [];
-    let newSchedule = [];
-    let cur = schedule[0][0], len = schedule[0][1];
-    for (let i = 1; i < schedule.length; i++) {
-        if (schedule[i][0] === cur) {
-            len += schedule[i][1];
-        } else {
-            newSchedule.push([cur, len]);
-            cur = schedule[i][0];
-            len = schedule[i][1];
-        }
-    }
-    newSchedule.push([cur, len]);
-    return newSchedule;
-}
-
-function setOutput(input, output) {
-    const n = input.processId.length;
-    for (let i = 0; i < n; i++) {
-        output.turnAroundTime[i] = output.completionTime[i] - input.arrivalTime[i];
-        output.waitingTime[i] = output.turnAroundTime[i] - input.totalBurstTime[i];
-    }
-    output.schedule = reduceSchedule(output.schedule);
-
-    let avgct = 0, avgtat = 0, avgwt = 0, avgrt = 0;
-    output.completionTime.forEach(e => avgct += e);
-    output.turnAroundTime.forEach(e => avgtat += e);
-    output.waitingTime.forEach(e => avgwt += e);
-    output.responseTime.forEach(e => avgrt += e);
-    output.averageTimes = [avgct / n, avgtat / n, avgwt / n, avgrt / n];
-}
-
-// ============================================================
-// SECTION 10: RENDERING - GANTT CHART (Custom HTML/CSS)
-// ============================================================
-
-const PROCESS_COLORS = [
-    '#6366f1', '#34d399', '#fbbf24', '#f87171', '#38bdf8',
-    '#a78bfa', '#fb923c', '#2dd4bf', '#f472b6', '#a3e635'
-];
-
-function renderGanttChart(output) {
-    const container = document.createElement('div');
-
-    // Gantt blocks
-    const ganttChart = document.createElement('div');
-    ganttChart.className = 'gantt-chart';
-    let time = 0;
-
-    output.schedule.forEach(([proc, dur]) => {
-        if (proc === -2 && dur === 0) return; // Skip 0-duration context switches
-        const block = document.createElement('div');
-        block.className = 'gantt-block';
-        block.style.minWidth = Math.max(35, dur * 35) + 'px';
-
-        if (proc === -2) {
-            block.classList.add('cs');
-            block.innerHTML = `<span class="gantt-label">CS</span>`;
-        } else if (proc === -1) {
-            block.classList.add('idle');
-            block.innerHTML = `<span class="gantt-label">—</span>`;
-        } else {
-            const pIdx = proc - 1;
-            block.classList.add('process', `p${proc}`);
-            block.innerHTML = `<span class="gantt-label">P${proc}</span><span class="gantt-time">${dur}u</span>`;
-        }
-
-        block.title = `${proc > 0 ? 'P' + proc : (proc === -1 ? 'Idle' : 'Context Switch')}: ${time} → ${time + dur}`;
-        ganttChart.appendChild(block);
-        time += dur;
-    });
-
-    container.appendChild(ganttChart);
-
-    // Time axis
-    const timeAxis = document.createElement('div');
-    timeAxis.className = 'gantt-time-axis';
-    time = 0;
-    output.schedule.forEach(([proc, dur]) => {
-        if (proc === -2 && dur === 0) return; // Skip 0-duration CS
-        const mark = document.createElement('span');
-        mark.className = 'gantt-time-mark';
-        mark.style.minWidth = Math.max(35, dur * 35) + 'px';
-        mark.textContent = time;
-        timeAxis.appendChild(mark);
-        time += dur;
-    });
-    // Final mark
-    const lastMark = document.createElement('span');
-    lastMark.className = 'gantt-time-mark';
-    lastMark.textContent = time;
-    lastMark.style.minWidth = '20px';
-    timeAxis.appendChild(lastMark);
-    container.appendChild(timeAxis);
-
-    return container;
-}
-
-// ============================================================
-// SECTION 11: RENDERING - FINAL TABLE
-// ============================================================
-
-function renderFinalTable(input, output) {
-    const n = input.processId.length;
-    const table = document.createElement('table');
-    table.className = 'final-table';
-
-    // Head
-    const thead = table.createTHead();
-    const headRow = thead.insertRow();
-    ['Process', 'Arrival', 'Burst', 'Completion', 'Turnaround', 'Waiting', 'Response'].forEach(h => {
-        const th = document.createElement('th');
-        th.textContent = h;
-        headRow.appendChild(th);
-    });
-
-    // Body
-    const tbody = table.createTBody();
-    for (let i = 0; i < n; i++) {
-        const row = tbody.insertRow();
-        [
-            `P${i + 1}`,
-            input.arrivalTime[i],
-            input.totalBurstTime[i],
-            output.completionTime[i],
-            output.turnAroundTime[i],
-            output.waitingTime[i],
-            output.responseTime[i]
-        ].forEach((val, idx) => {
-            const cell = row.insertCell();
-            cell.textContent = val;
-            if (idx === 0) cell.style.fontWeight = '600';
-        });
-    }
-
-    // Footer (averages)
-    const tfoot = table.createTFoot();
-    const footRow = tfoot.insertRow();
-    ['Average', '', ''].forEach(val => {
-        const cell = footRow.insertCell();
-        cell.textContent = val;
-    });
-    output.averageTimes.forEach(avg => {
-        const cell = footRow.insertCell();
-        cell.textContent = avg.toFixed(2);
-    });
-
-    return table;
-}
-
-// ============================================================
-// SECTION 12: RENDERING - STATS CARDS
-// ============================================================
-
-function renderStatsCards(input, output) {
-    const n = input.processId.length;
-    const container = document.createElement('div');
-    container.className = 'stats-grid';
-
-    // CPU Utilization
-    let tbt = 0;
-    input.totalBurstTime.forEach(e => tbt += e);
-    let lastct = 0;
-    output.completionTime.forEach(e => lastct = Math.max(lastct, e));
-    const cpuUtil = ((tbt / lastct) * 100).toFixed(1);
-
-    // Throughput
-    const throughput = (n / lastct).toFixed(4);
-
-    const stats = [
-        { label: 'CPU Utilization', value: cpuUtil, unit: '%' },
-        { label: 'Throughput', value: throughput, unit: 'proc/unit' },
-        { label: 'Avg Turnaround', value: output.averageTimes[1].toFixed(2), unit: 'units' },
-        { label: 'Avg Waiting', value: output.averageTimes[2].toFixed(2), unit: 'units' },
-        { label: 'Avg Response', value: output.averageTimes[3].toFixed(2), unit: 'units' },
-    ];
-
-    if (input.contextSwitch > 0) {
-        stats.push({ label: 'Context Switches', value: Math.max(0, output.contextSwitches - 1), unit: '' });
-    }
-
-    stats.forEach(s => {
-        const card = document.createElement('div');
-        card.className = 'stat-card';
-        card.innerHTML = `
-            <div class="stat-label">${s.label}</div>
-            <div class="stat-value">${s.value}</div>
-            <div class="stat-unit">${s.unit}</div>`;
-        container.appendChild(card);
-    });
-
-    return container;
-}
-
-// ============================================================
-// SECTION 13: RENDERING - TIME LOG ANIMATION
-// ============================================================
-
-function renderTimeLog(output) {
-    const container = document.createElement('div');
-    container.className = 'timelog-container';
-
-    // Reduce duplicates: only keep logs where state changed
-    const timeLog = [];
-    let prevJson = '';
-    output.timeLog.forEach(tl => {
-        const key = JSON.stringify({ t: tl.time, rm: tl.remain, rd: tl.ready, ru: tl.running, b: tl.block, te: tl.terminate });
-        if (key !== prevJson) {
-            timeLog.push(tl);
-            prevJson = key;
-        }
-    });
-
-    // Controls
-    const controls = document.createElement('div');
-    controls.className = 'timelog-controls';
-    controls.innerHTML = `
-        <button class="btn btn-primary" id="tl-play">▶ Play</button>
-        <button class="btn btn-secondary" id="tl-pause" disabled>⏸ Pause</button>
-        <button class="btn btn-secondary" id="tl-step" title="Step forward">⏭ Step</button>
-        <button class="btn btn-ghost" id="tl-reset">↻</button>
-        <span class="timelog-time" id="tl-time">Time: -</span>
-        <div class="timelog-speed">
-            Speed:
-            <select id="tl-speed">
-                <option value="1500">0.5x</option>
-                <option value="1000" selected>1x</option>
-                <option value="500">2x</option>
-                <option value="250">4x</option>
-            </select>
-        </div>`;
-    container.appendChild(controls);
-
-    // State display
-    const states = document.createElement('div');
-    states.className = 'timelog-states';
-    ['remain', 'ready', 'running', 'block', 'terminate'].forEach(state => {
-        const div = document.createElement('div');
-        div.className = 'timelog-state';
-        div.innerHTML = `
-            <div class="timelog-state-header ${state}">${state.charAt(0).toUpperCase() + state.slice(1)}</div>
-            <div class="timelog-state-body" id="tl-${state}"></div>`;
-        states.appendChild(div);
-    });
-    container.appendChild(states);
-
-    // Setup after append
-    setTimeout(() => {
-        let index = 0;
-        let interval = null;
-
-        function renderStep(i) {
-            if (i >= timeLog.length) return;
-            const tl = timeLog[i];
-            document.getElementById('tl-time').textContent = `Time: ${tl.time}`;
-            ['remain', 'ready', 'running', 'block', 'terminate'].forEach(state => {
-                const el = document.getElementById(`tl-${state}`);
-                el.innerHTML = tl[state].map(p =>
-                    `<span class="timelog-process-tag${tl.move && tl.move.length > 0 ? ' highlight' : ''}">P${p + 1}</span>`
-                ).join('');
-            });
-        }
-
-        function getSpeed() {
-            return parseInt(document.getElementById('tl-speed').value);
-        }
-
-        const playBtn = document.getElementById('tl-play');
-        const pauseBtn = document.getElementById('tl-pause');
-        const stepBtn = document.getElementById('tl-step');
-        const resetBtn = document.getElementById('tl-reset');
-
-        playBtn.addEventListener('click', () => {
-            if (interval) return;
-            playBtn.disabled = true;
-            pauseBtn.disabled = false;
-            interval = setInterval(() => {
-                if (index >= timeLog.length) {
-                    clearInterval(interval);
-                    interval = null;
-                    playBtn.disabled = false;
-                    pauseBtn.disabled = true;
-                    return;
-                }
-                renderStep(index++);
-            }, getSpeed());
-        });
-
-        pauseBtn.addEventListener('click', () => {
-            if (interval) {
-                clearInterval(interval);
-                interval = null;
-            }
-            playBtn.disabled = false;
-            pauseBtn.disabled = true;
-        });
-
-        stepBtn.addEventListener('click', () => {
-            if (index < timeLog.length) renderStep(index++);
-        });
-
-        resetBtn.addEventListener('click', () => {
-            if (interval) { clearInterval(interval); interval = null; }
-            index = 0;
-            playBtn.disabled = false;
-            pauseBtn.disabled = true;
-            ['remain', 'ready', 'running', 'block', 'terminate'].forEach(s => {
-                document.getElementById(`tl-${s}`).innerHTML = '';
-            });
-            document.getElementById('tl-time').textContent = 'Time: -';
-        });
-
-        renderStep(0);
-    }, 100);
-
-    return container;
-}
-
-// ============================================================
-// SECTION 14: RENDERING - COMPARISON CHARTS (Chart.js v4)
-// ============================================================
-
-function renderAlgorithmChart(outputDiv) {
-    const algoArray = ["fcfs", "sjf", "srtf", "ljf", "lrtf", "rr", "hrrn", "pnp", "pp"];
-    const algoNames = ["FCFS", "SJF", "SRTF", "LJF", "LRTF", "RR", "HRRN", "PNP", "PP"];
-    const chartData = [[], [], [], []];
-
-    algoArray.forEach(algo => {
-        const inp = collectInput();
-        if (!inp) return;
-        setAlgorithmNameType(inp, algo);
-        const util = new Utility();
-        setUtility(inp, util);
-        const out = new Output();
-        CPUScheduler(inp, util, out);
-        setOutput(inp, out);
-        for (let i = 0; i < 4; i++) chartData[i].push(out.averageTimes[i]);
-    });
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'chart-container';
-    const canvas = document.createElement('canvas');
-    canvas.id = 'algo-comparison-chart';
-    wrapper.appendChild(canvas);
-    outputDiv.appendChild(wrapper);
-
-    new Chart(canvas, {
-        type: 'bar',
-        data: {
-            labels: algoNames,
-            datasets: [
-                { label: 'Avg Completion', backgroundColor: '#6366f1', data: chartData[0] },
-                { label: 'Avg Turnaround', backgroundColor: '#f87171', data: chartData[1] },
-                { label: 'Avg Waiting', backgroundColor: '#fbbf24', data: chartData[2] },
-                { label: 'Avg Response', backgroundColor: '#34d399', data: chartData[3] },
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: { display: true, text: 'Algorithm Comparison (Lower is Better)', color: '#e8e8f0', font: { size: 14, weight: 600 } },
-                legend: { labels: { color: '#8888aa', font: { size: 11 } } }
-            },
-            scales: {
-                x: { ticks: { color: '#8888aa' }, grid: { color: 'rgba(255,255,255,0.04)' } },
-                y: { beginAtZero: true, ticks: { color: '#8888aa' }, grid: { color: 'rgba(255,255,255,0.04)' } }
-            }
-        }
-    });
-}
-
-function renderRoundRobinChart(outputDiv) {
-    const inp = collectInput();
-    if (!inp) return;
-
-    let maxTQ = 0;
-    inp.processTime.forEach(pt => {
-        pt.forEach((t, i) => { if (i % 2 === 0) maxTQ = Math.max(maxTQ, t); });
-    });
-    if (maxTQ < 1) maxTQ = 1;
-
-    const tqArray = [];
-    const chartData = [[], [], [], [], []];
-
-    for (let tq = 1; tq <= maxTQ; tq++) {
-        tqArray.push(tq);
-        const rrInp = collectInput();
-        if (!rrInp) return;
-        setAlgorithmNameType(rrInp, 'rr');
-        rrInp.timeQuantum = tq;
-        const util = new Utility();
-        setUtility(rrInp, util);
-        const out = new Output();
-        CPUScheduler(rrInp, util, out);
-        setOutput(rrInp, out);
-        for (let i = 0; i < 4; i++) chartData[i].push(out.averageTimes[i]);
-        chartData[4].push(out.contextSwitches);
-    }
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'chart-container';
-    const canvas = document.createElement('canvas');
-    canvas.id = 'rr-comparison-chart';
-    wrapper.appendChild(canvas);
-    outputDiv.appendChild(wrapper);
-
-    new Chart(canvas, {
-        type: 'line',
-        data: {
-            labels: tqArray,
-            datasets: [
-                { label: 'Avg Completion', borderColor: '#6366f1', data: chartData[0], tension: 0.3, fill: false },
-                { label: 'Avg Turnaround', borderColor: '#f87171', data: chartData[1], tension: 0.3, fill: false },
-                { label: 'Avg Waiting', borderColor: '#fbbf24', data: chartData[2], tension: 0.3, fill: false },
-                { label: 'Avg Response', borderColor: '#34d399', data: chartData[3], tension: 0.3, fill: false },
-                { label: 'Context Switches', borderColor: '#a78bfa', data: chartData[4], tension: 0.3, fill: false },
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: { display: true, text: 'Round Robin — Time Quantum Analysis', color: '#e8e8f0', font: { size: 14, weight: 600 } },
-                legend: { labels: { color: '#8888aa', font: { size: 11 } } }
-            },
-            scales: {
-                x: {
-                    title: { display: true, text: 'Time Quantum', color: '#8888aa' },
-                    ticks: { color: '#8888aa' },
-                    grid: { color: 'rgba(255,255,255,0.04)' }
-                },
-                y: {
-                    beginAtZero: true,
-                    ticks: { color: '#8888aa' },
-                    grid: { color: 'rgba(255,255,255,0.04)' }
-                }
-            }
-        }
-    });
-}
-
-// ============================================================
-// SECTION 15: RENDERING - EXPORT
-// ============================================================
-
-function exportCSV(input, output) {
-    const n = input.processId.length;
-    let csv = 'Process,Arrival,Burst,Completion,Turnaround,Waiting,Response\n';
-    for (let i = 0; i < n; i++) {
-        csv += `P${i+1},${input.arrivalTime[i]},${input.totalBurstTime[i]},${output.completionTime[i]},${output.turnAroundTime[i]},${output.waitingTime[i]},${output.responseTime[i]}\n`;
-    }
-    csv += `Average,,,${output.averageTimes[0].toFixed(2)},${output.averageTimes[1].toFixed(2)},${output.averageTimes[2].toFixed(2)},${output.averageTimes[3].toFixed(2)}\n`;
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `scheduling_${getSelectedAlgorithm()}_results.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('CSV exported successfully!', 'success');
-}
-
-// ============================================================
-// SECTION 16: MAIN OUTPUT ASSEMBLY
-// ============================================================
-
-function showOutput(input, output) {
-    const outputSection = document.getElementById('output-section');
-    outputSection.innerHTML = '';
-
-    // Tabs
-    const tabContainer = document.createElement('div');
-
-    // Tab navigation
-    const tabs = document.createElement('div');
-    tabs.className = 'output-tabs';
-    const tabDefs = [
-        { id: 'gantt', label: '📊 Gantt Chart' },
-        { id: 'table', label: '📋 Results Table' },
-        { id: 'timelog', label: '⏱ Time Log' },
-        { id: 'comparison', label: '📈 Comparison' },
-    ];
-
-    tabDefs.forEach((tab, idx) => {
-        const btn = document.createElement('button');
-        btn.className = 'output-tab' + (idx === 0 ? ' active' : '');
-        btn.textContent = tab.label;
-        btn.dataset.tab = tab.id;
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(`panel-${tab.id}`).classList.add('active');
-        });
-        tabs.appendChild(btn);
-    });
-
-    // Card wrapper
-    const card = document.createElement('section');
-    card.className = 'glass-card output-card';
-    card.appendChild(tabs);
-
-    // Panel 1: Gantt Chart
-    const ganttPanel = document.createElement('div');
-    ganttPanel.className = 'tab-panel active';
-    ganttPanel.id = 'panel-gantt';
-    const ganttContainer = document.createElement('div');
-    ganttContainer.className = 'gantt-container';
-    ganttContainer.appendChild(renderGanttChart(output));
-    ganttPanel.appendChild(ganttContainer);
-    card.appendChild(ganttPanel);
-
-    // Panel 2: Results Table
-    const tablePanel = document.createElement('div');
-    tablePanel.className = 'tab-panel';
-    tablePanel.id = 'panel-table';
-    tablePanel.appendChild(renderFinalTable(input, output));
-    tablePanel.appendChild(renderStatsCards(input, output));
-
-    // Export button
-    const exportGroup = document.createElement('div');
-    exportGroup.className = 'export-group';
-    const csvBtn = document.createElement('button');
-    csvBtn.className = 'btn btn-secondary';
-    csvBtn.textContent = '📥 Export CSV';
-    csvBtn.addEventListener('click', () => exportCSV(input, output));
-    exportGroup.appendChild(csvBtn);
-    tablePanel.appendChild(exportGroup);
-    card.appendChild(tablePanel);
-
-    // Panel 3: Time Log
-    const timelogPanel = document.createElement('div');
-    timelogPanel.className = 'tab-panel';
-    timelogPanel.id = 'panel-timelog';
-    timelogPanel.appendChild(renderTimeLog(output));
-    card.appendChild(timelogPanel);
-
-    // Panel 4: Comparison Charts
-    const compPanel = document.createElement('div');
-    compPanel.className = 'tab-panel';
-    compPanel.id = 'panel-comparison';
-    card.appendChild(compPanel);
-
-    outputSection.appendChild(card);
-
-    // Render comparison charts lazily when tab is clicked (Chart.js needs visible canvas)
-    let compChartsRendered = false;
-    const compTabBtn = tabs.querySelector('[data-tab="comparison"]');
-    compTabBtn.addEventListener('click', () => {
-        if (!compChartsRendered) {
-            compChartsRendered = true;
-            setTimeout(() => {
-                if (getSelectedAlgorithm() === 'rr') {
-                    renderRoundRobinChart(compPanel);
-                }
-                renderAlgorithmChart(compPanel);
-            }, 50);
-        }
-    });
-
-    // Scroll to output
-    outputSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-// ============================================================
-// SECTION 17: MAIN CALCULATION ENTRY POINT
-// ============================================================
 
 function calculateOutput() {
-    const input = collectInput();
-    if (!input) return;
-
-    const utility = new Utility();
-    setUtility(input, utility);
-    const output = new Output();
-
-    try {
-        CPUScheduler(input, utility, output);
-        setOutput(input, output);
-        showOutput(input, output);
-    } catch (err) {
-        console.error('Scheduler error:', err);
-        showToast('Error during calculation. Check console for details.', 'error');
-    }
+    let outputDiv = document.getElementById("output");
+    outputDiv.innerHTML = "";
+    let mainInput = new Input();
+    let mainUtility = new Utility();
+    let mainOutput = new Output();
+    setInput(mainInput);
+    setUtility(mainInput, mainUtility);
+    CPUScheduler(mainInput, mainUtility, mainOutput);
+    setOutput(mainInput, mainOutput);
+    showOutput(mainInput, mainOutput, outputDiv);
 }
 
-// ============================================================
-// SECTION 18: TOAST NOTIFICATIONS
-// ============================================================
-
-function showToast(message, type = 'success') {
-    // Remove existing toasts
-    document.querySelectorAll('.toast').forEach(t => t.remove());
-
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${type === 'success' ? '✓' : '✗'}</span> ${message}`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-
-// ============================================================
-// SECTION 19: EVENT LISTENERS & INITIALIZATION
-// ============================================================
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize presets
-    initPresets();
-
-    // Add default processes
-    addProcess(0, [4], 1);
-    addProcess(1, [3], 1);
-    addProcess(2, [1], 1);
-
-    // Algorithm selector
-    document.querySelectorAll('input[name="algo"]').forEach(radio => {
-        radio.addEventListener('change', updateAlgoUI);
-    });
-    updateAlgoUI();
-
-    // Priority toggle
-    document.getElementById('priority-toggle-btn').addEventListener('click', () => {
-        priorityPreference *= -1;
-        const el = document.getElementById('priority-preference');
-        el.textContent = priorityPreference === 1 ? 'High' : 'Low';
-    });
-
-    // Add/Remove process
-    document.getElementById('add-process-btn').addEventListener('click', () => addProcess());
-    document.getElementById('remove-process-btn').addEventListener('click', removeProcess);
-
-    // Calculate
-    document.getElementById('calculate-btn').addEventListener('click', calculateOutput);
-
-    // Reset
-    document.getElementById('reset-btn').addEventListener('click', () => {
-        clearProcesses();
-        addProcess(0, [4], 1);
-        addProcess(1, [3], 1);
-        addProcess(2, [1], 1);
-        document.getElementById('context-switch').value = 0;
-        document.getElementById('tq').value = 2;
-        document.getElementById('output-section').innerHTML = '';
-        document.getElementById('algo-fcfs').checked = true;
-        updateAlgoUI();
-    });
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.target.matches('input')) {
-            calculateOutput();
-        }
-    });
-});
+document.getElementById("calculate").onclick = () => {
+    calculateOutput();
+};
