@@ -978,9 +978,9 @@ function CPUScheduler(input, utility, output) {
                             return priorityPreference * (input.priority[a] - input.priority[b]);
                         case 'hrrn':
                             function responseRatio(id) {
-                                let s = utility.remainingBurstTime[id];
-                                let w = currentTimeLog.time - input.arrivalTime[id] - s;
-                                return 1 + w / s;
+                                let s = input.totalBurstTime[id];
+                                let w = currentTimeLog.time - input.arrivalTime[id];
+                                return (w + s) / s;
                             }
                             return responseRatio(b) - responseRatio(a);
                     }
