@@ -705,12 +705,12 @@ function showTimeLog(output, outputDiv) {
             if (index == output.timeLog.length) {
                 clearInterval(timeLogInterval);
             }
-            document.getElementById("calculate").onclick = () => {
-                clearInterval(timeLogInterval);
-                document.getElementById("time-log-output-div").innerHTML = "";
-                calculateOutput();
-            }
         }, 1000);
+        document.getElementById("calculate").onclick = () => {
+            clearInterval(timeLogInterval);
+            document.getElementById("time-log-output-div").innerHTML = "";
+            calculateOutput();
+        };
     };
 }
 
