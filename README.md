@@ -121,6 +121,13 @@ External dependencies (loaded via CDN in `index.html`):
 
 Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
+## Credits
+
+This project builds on a CPU scheduling algorithms visualiser originally written by
+Jay Hemnani and released under the MIT License. The scheduling algorithms, the page
+layout and the chart rendering started from that work.
+
 ## License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE). The original work is copyright Jay Hemnani
+(2020). Later changes are copyright Jay Hemnani (2025).
