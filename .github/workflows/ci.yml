@@ -27,7 +27,7 @@ jobs:
         run: npx prettier --check "**/*.{js,css,html,md,json,yml}" || true
 
       - name: Lint HTML
-        run: npx -y htmlhint index.html || true
+        run: npx -y htmlhint index.html
 
       - name: Run tests
         run: npm test
