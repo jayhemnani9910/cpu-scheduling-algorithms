@@ -41,9 +41,9 @@ body:
         - Not algorithm-specific
         - FCFS
         - SJF
-        - SRJF
+        - SRTF
         - LJF
-        - LRJF
+        - LRTF
         - Priority Non-Preemptive
         - Priority Preemptive
         - Round Robin

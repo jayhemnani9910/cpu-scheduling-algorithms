@@ -22,12 +22,12 @@
 - The shortest job in the ready queue is processed first.
   - **Shortest Job First (SJF)**
     >Non-Preemptive
-  - **Shortest Remaining Job First (SRJF)**
+  - **Shortest Remaining Job First (SRTF)**
     >Preemptive
 - The longest job in the ready queue is processed first.
   - **Longest Job First (LJF)**
     >Non-Preemptive
-  - **Longest Remaining Job First (LRJF)**
+  - **Longest Remaining Job First (LRTF)**
     >Preemptive
 - The highest priority job in the ready queue is processed first.
   - **Priority Non-Preemptive (PNP)**
