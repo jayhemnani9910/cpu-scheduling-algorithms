@@ -342,7 +342,7 @@ function reduceTimeLog(timeLog) {
     let newTimeLog = [],
         j = 0;
     for (let i = 0; i < timeLogLength - 1; i++) {
-        if (timeLog[i] != timeLog[i + 1]) {
+        if (JSON.stringify(timeLog[i]) != JSON.stringify(timeLog[i + 1])) {
             newTimeLog.push(timeLog[j]);
         }
         j = i + 1;
