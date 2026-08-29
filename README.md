@@ -80,7 +80,16 @@ node tests.js
 npm test
 ```
 
-All 9 algorithms have unit tests covering arrival ordering, preemption, tiebreaks, and edge cases.
+All 9 algorithms have unit tests covering arrival ordering, preemption, tiebreaks, and edge
+cases. Read what that does and does not cover before relying on it:
+
+- `tests.js` does not load `script.js`. It carries its own copy of the scheduling logic, so a
+  green run says nothing about the code the page ships. Changing `script.js` is not covered by
+  any test.
+- No test uses a process with an I/O burst, and none sets a context switch time. Every case is
+  a single CPU burst with no switching cost.
+- `runTest` checks completion, turnaround, waiting and response times. It does not check the
+  schedule, the time log, or the context switch count.
 
 ## Quick Start
 
