@@ -24,14 +24,16 @@ Then visit `http://localhost:8000`.
 ## Code style
 
 - Match the existing style in `script.js` and `style.css`.
-- Use 4-space indentation in JS, 2-space in HTML/CSS to match current files.
+- Use 4-space indentation throughout, in JS, HTML and CSS, to match current files.
 - Keep algorithm logic readable — this is a learning tool.
 
 ## Pull request checklist
 
 - [ ] Change is focused on a single issue/feature
 - [ ] Tested manually in a browser
-- [ ] `tests.js` updated if algorithm logic changed
+- [ ] `tests.js` updated if algorithm logic changed. Note that `tests.js` holds its own copy of
+      the scheduling logic and does not load `script.js`, so a green suite does not check your
+      change. Exercise it in the browser as well.
 - [ ] README updated if user-facing behavior changed
 
 ## Code of Conduct
