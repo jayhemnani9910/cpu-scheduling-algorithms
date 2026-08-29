@@ -1,4 +1,5 @@
 node_modules/
-.github/
 *.min.js
 *.min.css
+.remember/
+package-lock.json
