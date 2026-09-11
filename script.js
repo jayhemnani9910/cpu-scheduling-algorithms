@@ -281,6 +281,7 @@ function showGanttChart(output, outputDiv) {
     });
     let ganttChart = document.createElement("div");
     ganttChart.id = "gantt-chart";
+    outputDiv.appendChild(ganttChart);
 
     google.charts.load("current", { packages: ["timeline"] });
     google.charts.setOnLoadCallback(drawGanttChart);
@@ -309,7 +310,6 @@ function showGanttChart(output, outputDiv) {
         };
         chart.draw(dataTable, options);
     }
-    outputDiv.appendChild(ganttChart);
 }
 
 function showTimelineChart(output, outputDiv) {
@@ -331,6 +331,7 @@ function showTimelineChart(output, outputDiv) {
     timelineChartData.sort((a, b) => parseInt(a[0].substring(1, a[0].length)) - parseInt(b[0].substring(1, b[0].length)));
     let timelineChart = document.createElement("div");
     timelineChart.id = "timeline-chart";
+    outputDiv.appendChild(timelineChart);
 
     google.charts.load("current", { packages: ["timeline"] });
     google.charts.setOnLoadCallback(drawTimelineChart);
@@ -354,7 +355,6 @@ function showTimelineChart(output, outputDiv) {
         };
         chart.draw(dataTable, options);
     }
-    outputDiv.appendChild(timelineChart);
 }
 
 function showFinalTable(input, output, outputDiv) {
