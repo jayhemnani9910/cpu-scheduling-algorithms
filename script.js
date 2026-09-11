@@ -311,7 +311,7 @@ function setInput(input) {
 }
 
 function setUtility(input, utility) {
-    utility.remainingProcessTime = input.processTime.slice();
+    utility.remainingProcessTime = input.processTime.map((row) => row.slice());
     utility.remainingBurstTime = input.totalBurstTime.slice();
     utility.remainingTimeRunning = new Array(process).fill(0);
     utility.currentProcessIndex = new Array(process).fill(0);
@@ -321,6 +321,9 @@ function setUtility(input, utility) {
 }
 
 function reduceSchedule(schedule) {
+    if (!schedule || schedule.length == 0) {
+        return [];
+    }
     let newSchedule = [];
     let currentScheduleElement = schedule[0][0];
     let currentScheduleLength = schedule[0][1];
@@ -664,8 +667,9 @@ function nextTimeLog(timeLog) {
     document.getElementById("time-log-time").innerHTML = "Time : " + timeLog.time;
 }
 
+let timeLogInterval = null;
+
 function showTimeLog(output, outputDiv) {
-    reduceTimeLog(output.timeLog);
     let timeLogDiv = document.createElement("div");
     timeLogDiv.id = "time-log-div";
     timeLogDiv.style.height = (15 * process) + 300 + "px";
@@ -676,7 +680,6 @@ function showTimeLog(output, outputDiv) {
     outputDiv.appendChild(timeLogDiv);
 
     document.querySelector("#start-time-log").onclick = () => {
-        timeLogStart = 1;
         let timeLogDiv = document.getElementById("time-log-div");
         let timeLogOutputDiv = document.createElement("div");
         timeLogOutputDiv.id = "time-log-output-div";
@@ -691,7 +694,7 @@ function showTimeLog(output, outputDiv) {
         timeLogOutputDiv.appendChild(timeLogTime);
         timeLogDiv.appendChild(timeLogOutputDiv);
         let index = 0;
-        let timeLogInterval = setInterval(() => {
+        timeLogInterval = setInterval(() => {
             nextTimeLog(output.timeLog[index]);
             if (index != output.timeLog.length - 1) {
                 setTimeout(() => {
@@ -706,11 +709,6 @@ function showTimeLog(output, outputDiv) {
                 clearInterval(timeLogInterval);
             }
         }, 1000);
-        document.getElementById("calculate").onclick = () => {
-            clearInterval(timeLogInterval);
-            document.getElementById("time-log-output-div").innerHTML = "";
-            calculateOutput();
-        };
     };
 }
 
@@ -747,7 +745,7 @@ function showRoundRobinChart(outputDiv) {
         for (let i = 0; i < 4; i++) {
             roundRobinChartData[i].push(roundRobinOutput.averageTimes[i]);
         }
-        roundRobinChartData[4].push(roundRobinOutput.contextSwitches);
+        roundRobinChartData[4].push(roundRobinOutput.contextSwitches - 1);
     }
     let roundRobinChartCanvas = document.createElement('canvas');
     roundRobinChartCanvas.id = "round-robin-chart";
@@ -946,7 +944,7 @@ function CPUScheduler(input, utility, output) {
         }
     }
     let currentTimeLog = new TimeLog();
-    currentTimeLog.remain = input.processId;
+    currentTimeLog.remain = input.processId.slice();
     output.timeLog.push(JSON.parse(JSON.stringify(currentTimeLog)));
     currentTimeLog.move = [];
     currentTimeLog.time++;
@@ -961,7 +959,7 @@ function CPUScheduler(input, utility, output) {
                 found = currentTimeLog.ready[0];
                 utility.remainingTimeRunning[found] = Math.min(utility.remainingProcessTime[found][utility.currentProcessIndex[found]], input.timeQuantum);
             } else {
-                let candidates = currentTimeLog.ready;
+                let candidates = [...currentTimeLog.ready];
                 candidates.sort((a, b) => a - b);
                 candidates.sort((a, b) => {
                     switch (input.algorithm) {
@@ -1089,6 +1087,7 @@ function CPUScheduler(input, utility, output) {
 }
 
 function calculateOutput() {
+    clearInterval(timeLogInterval);
     let outputDiv = document.getElementById("output");
     outputDiv.innerHTML = "";
     let mainInput = new Input();
