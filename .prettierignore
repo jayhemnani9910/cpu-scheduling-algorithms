@@ -3,4 +3,3 @@ node_modules/
 *.min.css
 .remember/
 package-lock.json
-.github/workflows/pages.yml
