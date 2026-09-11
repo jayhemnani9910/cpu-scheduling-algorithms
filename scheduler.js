@@ -59,19 +59,19 @@ class TimeLog {
 function setAlgorithmNameType(input, algorithm) {
     input.algorithm = algorithm;
     switch (algorithm) {
-        case 'fcfs':
-        case 'sjf':
-        case 'ljf':
-        case 'pnp':
-        case 'hrrn':
+        case "fcfs":
+        case "sjf":
+        case "ljf":
+        case "pnp":
+        case "hrrn":
             input.algorithmType = "nonpreemptive";
             break;
-        case 'srtf':
-        case 'lrtf':
-        case 'pp':
+        case "srtf":
+        case "lrtf":
+        case "pp":
             input.algorithmType = "preemptive";
             break;
-        case 'rr':
+        case "rr":
             input.algorithmType = "roundrobin";
             break;
     }
@@ -162,17 +162,21 @@ function setOutput(input, output) {
 
 function CPUScheduler(input, utility, output, priorityPreference = 1) {
     function updateReadyQueue(currentTimeLog) {
-        let candidatesRemain = currentTimeLog.remain.filter((element) => input.arrivalTime[element] <= currentTimeLog.time);
+        let candidatesRemain = currentTimeLog.remain.filter(
+            (element) => input.arrivalTime[element] <= currentTimeLog.time
+        );
         if (candidatesRemain.length > 0) {
             currentTimeLog.move.push(0);
         }
-        let candidatesBlock = currentTimeLog.block.filter((element) => utility.returnTime[element] <= currentTimeLog.time);
+        let candidatesBlock = currentTimeLog.block.filter(
+            (element) => utility.returnTime[element] <= currentTimeLog.time
+        );
         if (candidatesBlock.length > 0) {
             currentTimeLog.move.push(5);
         }
         let candidates = candidatesRemain.concat(candidatesBlock);
         candidates.sort((a, b) => utility.returnTime[a] - utility.returnTime[b]);
-        candidates.forEach(element => {
+        candidates.forEach((element) => {
             moveElement(element, currentTimeLog.remain, currentTimeLog.ready);
             moveElement(element, currentTimeLog.block, currentTimeLog.ready);
         });
@@ -180,7 +184,8 @@ function CPUScheduler(input, utility, output, priorityPreference = 1) {
         currentTimeLog.move = [];
     }
 
-    function moveElement(value, from, to) { //if present in from and not in to
+    function moveElement(value, from, to) {
+        //if present in from and not in to
         let index = from.indexOf(value);
         if (index != -1) {
             from.splice(index, 1);
@@ -201,26 +206,29 @@ function CPUScheduler(input, utility, output, priorityPreference = 1) {
         if (currentTimeLog.running.length == 1) {
             found = currentTimeLog.running[0];
         } else if (currentTimeLog.ready.length > 0) {
-            if (input.algorithm == 'rr') {
+            if (input.algorithm == "rr") {
                 found = currentTimeLog.ready[0];
-                utility.remainingTimeRunning[found] = Math.min(utility.remainingProcessTime[found][utility.currentProcessIndex[found]], input.timeQuantum);
+                utility.remainingTimeRunning[found] = Math.min(
+                    utility.remainingProcessTime[found][utility.currentProcessIndex[found]],
+                    input.timeQuantum
+                );
             } else {
                 let candidates = [...currentTimeLog.ready];
                 candidates.sort((a, b) => a - b);
                 candidates.sort((a, b) => {
                     switch (input.algorithm) {
-                        case 'fcfs':
+                        case "fcfs":
                             return utility.returnTime[a] - utility.returnTime[b];
-                        case 'sjf':
-                        case 'srtf':
+                        case "sjf":
+                        case "srtf":
                             return utility.remainingBurstTime[a] - utility.remainingBurstTime[b];
-                        case 'ljf':
-                        case 'lrtf':
+                        case "ljf":
+                        case "lrtf":
                             return utility.remainingBurstTime[b] - utility.remainingBurstTime[a];
-                        case 'pnp':
-                        case 'pp':
+                        case "pnp":
+                        case "pp":
                             return priorityPreference * (input.priority[a] - input.priority[b]);
-                        case 'hrrn':
+                        case "hrrn":
                             function responseRatio(id) {
                                 let s = input.totalBurstTime[id];
                                 let w = currentTimeLog.time - input.arrivalTime[id];
@@ -230,7 +238,13 @@ function CPUScheduler(input, utility, output, priorityPreference = 1) {
                     }
                 });
                 found = candidates[0];
-                if (input.algorithmType == "preemptive" && found >= 0 && lastFound >= 0 && found != lastFound) { //context switch
+                if (
+                    input.algorithmType == "preemptive" &&
+                    found >= 0 &&
+                    lastFound >= 0 &&
+                    found != lastFound
+                ) {
+                    //context switch
                     output.schedule.push([-2, input.contextSwitch]);
                     for (let i = 0; i < input.contextSwitch; i++, currentTimeLog.time++) {
                         updateReadyQueue(currentTimeLog);
@@ -255,10 +269,12 @@ function CPUScheduler(input, utility, output, priorityPreference = 1) {
             utility.remainingProcessTime[found][utility.currentProcessIndex[found]]--;
             utility.remainingBurstTime[found]--;
 
-            if (input.algorithm == 'rr') {
+            if (input.algorithm == "rr") {
                 utility.remainingTimeRunning[found]--;
                 if (utility.remainingTimeRunning[found] == 0) {
-                    if (utility.remainingProcessTime[found][utility.currentProcessIndex[found]] == 0) {
+                    if (
+                        utility.remainingProcessTime[found][utility.currentProcessIndex[found]] == 0
+                    ) {
                         utility.currentProcessIndex[found]++;
                         if (utility.currentProcessIndex[found] == input.processTimeLength[found]) {
                             utility.done[found] = true;
@@ -266,7 +282,9 @@ function CPUScheduler(input, utility, output, priorityPreference = 1) {
                             moveElement(found, currentTimeLog.running, currentTimeLog.terminate);
                             currentTimeLog.move.push(2);
                         } else {
-                            utility.returnTime[found] = currentTimeLog.time + input.processTime[found][utility.currentProcessIndex[found]];
+                            utility.returnTime[found] =
+                                currentTimeLog.time +
+                                input.processTime[found][utility.currentProcessIndex[found]];
                             utility.currentProcessIndex[found]++;
                             moveElement(found, currentTimeLog.running, currentTimeLog.block);
                             currentTimeLog.move.push(4);
@@ -289,7 +307,8 @@ function CPUScheduler(input, utility, output, priorityPreference = 1) {
                         output.contextSwitches++;
                     }
                 }
-            } else { //preemptive and non-preemptive
+            } else {
+                //preemptive and non-preemptive
                 if (utility.remainingProcessTime[found][utility.currentProcessIndex[found]] == 0) {
                     utility.currentProcessIndex[found]++;
                     if (utility.currentProcessIndex[found] == input.processTimeLength[found]) {
@@ -298,14 +317,17 @@ function CPUScheduler(input, utility, output, priorityPreference = 1) {
                         moveElement(found, currentTimeLog.running, currentTimeLog.terminate);
                         currentTimeLog.move.push(2);
                     } else {
-                        utility.returnTime[found] = currentTimeLog.time + input.processTime[found][utility.currentProcessIndex[found]];
+                        utility.returnTime[found] =
+                            currentTimeLog.time +
+                            input.processTime[found][utility.currentProcessIndex[found]];
                         utility.currentProcessIndex[found]++;
                         moveElement(found, currentTimeLog.running, currentTimeLog.block);
                         currentTimeLog.move.push(4);
                     }
                     output.timeLog.push(JSON.parse(JSON.stringify(currentTimeLog)));
                     currentTimeLog.move = [];
-                    if (currentTimeLog.running.length == 0) { //context switch
+                    if (currentTimeLog.running.length == 0) {
+                        //context switch
                         output.schedule.push([-2, input.contextSwitch]);
                         for (let i = 0; i < input.contextSwitch; i++, currentTimeLog.time++) {
                             updateReadyQueue(currentTimeLog);

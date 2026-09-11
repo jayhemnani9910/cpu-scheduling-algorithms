@@ -1,0 +1,21 @@
+{
+    "entry": "index.html",
+    "steps": [
+        { "click": "#calculate" },
+        { "wait": 1500 },
+        { "expect": "#start-time-log" },
+        { "click": "#start-time-log" },
+        { "wait": 2500 },
+        { "click": "#calculate" },
+        { "wait": 1500 },
+        { "click": "#calculate" },
+        { "wait": 1500 },
+        { "select": "#algo", "value": "rr" },
+        { "click": "#calculate" },
+        { "wait": 1500 },
+        { "click": "#start-time-log" },
+        { "wait": 1500 },
+        { "click": "#calculate" },
+        { "wait": 1500 }
+    ]
+}

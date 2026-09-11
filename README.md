@@ -6,6 +6,7 @@
 # CPU Scheduling Algorithms
 
 ## Functionalities
+
 - 9 Algorithms are implemented.
 - Each process can have different number of CPU Burst Time and I/O Burst Time.
 - Gantt Chart and Timeline Chart for the given Schedule.
@@ -14,52 +15,54 @@
 - Comparison for Round Robin Algorithm for all time quantum.
 - Comparison between all the algorithms wrt Average Completion Time, Turn Around Time, Waiting Time and Response Time.
 
-
 ### Different Criteria and Algorithms
+
 - The first process arrived in the ready queue is processed first.
-  - **First Come First Serve (FCFS)**
-    >Non-Preemptive
+    - **First Come First Serve (FCFS)**
+        > Non-Preemptive
 - The shortest job in the ready queue is processed first.
-  - **Shortest Job First (SJF)**
-    >Non-Preemptive
-  - **Shortest Remaining Job First (SRTF)**
-    >Preemptive
+    - **Shortest Job First (SJF)**
+        > Non-Preemptive
+    - **Shortest Remaining Job First (SRTF)**
+        > Preemptive
 - The longest job in the ready queue is processed first.
-  - **Longest Job First (LJF)**
-    >Non-Preemptive
-  - **Longest Remaining Job First (LRTF)**
-    >Preemptive
+    - **Longest Job First (LJF)**
+        > Non-Preemptive
+    - **Longest Remaining Job First (LRTF)**
+        > Preemptive
 - The highest priority job in the ready queue is processed first.
-  - **Priority Non-Preemptive (PNP)**
-    >Non-Preemptive
-  - **Priority Preemptive(PP)**
-    >Preemptive
+    - **Priority Non-Preemptive (PNP)**
+        > Non-Preemptive
+    - **Priority Preemptive(PP)**
+        > Preemptive
 - The jobs in the ready queue are given a fixed time quantum.
-  - **Round Robin (RR)**
-    >Preemptive
+    - **Round Robin (RR)**
+        > Preemptive
 - The job with the highest response ratio in the ready queue is processed first.
-  - **Highest Response Ratio Next (HRRN)**
-    >Non-Preemptive
-    
+    - **Highest Response Ratio Next (HRRN)**
+        > Non-Preemptive
+
 **Non-Preemptive:**
-  Once a job enters the Running Queue, it will only leave when its required CPU Burst Time is completed or it requires an I/O Job.
-  
+Once a job enters the Running Queue, it will only leave when its required CPU Burst Time is completed or it requires an I/O Job.
+
 **Preemptive:**
-  A job in the Running Queue can be removed (preeempted) by other process of higher priority or with better criteria satisfaction or the given time quantum is completed.
-  
+A job in the Running Queue can be removed (preeempted) by other process of higher priority or with better criteria satisfaction or the given time quantum is completed.
+
 #### Different States in CPU Scheduler
+
 - Remain
-  >The processes which are yet to arrive.
+    > The processes which are yet to arrive.
 - Ready
-  >The processes which are ready to be executed.
+    > The processes which are ready to be executed.
 - Running
-  >Current Process Running in the CPU.
+    > Current Process Running in the CPU.
 - Block
-  >The processes which are blocked for I/O Time.
+    > The processes which are blocked for I/O Time.
 - Terminate
-  >The processes which have completed all the CPU and I/O.
-  
+    > The processes which have completed all the CPU and I/O.
+
 ### Technologies Used
+
 - HTML
 - CSS
 - Vanilla JS
@@ -75,17 +78,15 @@ Try it live: **https://jayhemnani9910.github.io/cpu-scheduling-algorithms/**
 ## Running Tests
 
 ```bash
-node tests.js
-# or
 npm test
 ```
 
 All 9 algorithms have unit tests covering arrival ordering, preemption, tiebreaks, and edge
 cases. Read what that does and does not cover before relying on it:
 
-- `tests.js` does not load `script.js`. It carries its own copy of the scheduling logic, so a
-  green run says nothing about the code the page ships. Changing `script.js` is not covered by
-  any test.
+- The tests load `scheduler.js`, the same engine file the page ships, so a green run covers the
+  real scheduling code. DOM code in `script.js` is not unit tested; `browse.json` drives a
+  headless browser through the page instead.
 - No test uses a process with an I/O burst, and none sets a context switch time. Every case is
   a single CPU burst with no switching cost.
 - `runTest` checks completion, turnaround, waiting and response times. It does not check the
@@ -106,20 +107,23 @@ python3 -m http.server 8000
 
 ## Architecture
 
-| File | Purpose |
-|------|---------|
-| `index.html` | UI layout, form inputs, chart containers |
-| `style.css` | Styling |
-| `script.js` | All scheduling algorithms, state machine, chart rendering |
-| `tests.js` | Algorithm correctness tests |
+| File                      | Purpose                                                               |
+| ------------------------- | --------------------------------------------------------------------- |
+| `index.html`              | UI layout, form inputs, chart containers                              |
+| `style.css`               | Styling                                                               |
+| `scheduler.js`            | The scheduling engine: all 9 algorithms and the state machine, no DOM |
+| `script.js`               | UI: reads the form, runs the engine, renders tables and charts        |
+| `tests/scheduler.test.js` | Algorithm correctness tests, run against `scheduler.js`               |
+| `browse.json`             | Click steps for a headless browser smoke test of the page             |
 
 External dependencies (loaded via CDN in `index.html`):
+
 - [Google Charts](https://developers.google.com/chart) — Gantt and timeline charts
 - [Chart.js](https://www.chartjs.org/) — comparison bar charts
 
 ## Contributing
 
-Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
+Contributions welcome! See [CONTRIBUTING.md](.github/CONTRIBUTING.md) and the [Code of Conduct](.github/CODE_OF_CONDUCT.md).
 
 ## License
 
