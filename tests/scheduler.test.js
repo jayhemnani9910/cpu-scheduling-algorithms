@@ -30,15 +30,10 @@ function createInput(processes, algorithm, options = {}) {
         input.processTime.push(pt);
         input.processTimeLength.push(pt.length);
     }
-    // total burst time
-    input.totalBurstTime = new Array(n).fill(0);
-    input.processTime.forEach((e1, i) => {
-        e1.forEach((e2, j) => {
-            if (j % 2 === 0) {
-                input.totalBurstTime[i] += e2;
-            }
-        });
-    });
+    // CPU bursts sit at the even indexes
+    input.totalBurstTime = input.processTime.map((pt) =>
+        pt.reduce((sum, t, j) => (j % 2 === 0 ? sum + t : sum), 0)
+    );
     setAlgorithmNameType(input, algorithm);
     input.contextSwitch = options.contextSwitch || 0;
     input.timeQuantum = options.timeQuantum || 1;
@@ -60,49 +55,21 @@ function runTest(name, processes, algorithm, expected, options = {}) {
     CPUScheduler(input, utility, output, options.priorityPreference || 1);
     setOutput(input, output);
 
-    let pass = true;
+    const fields = {
+        ct: ["CT", output.completionTime],
+        tat: ["TAT", output.turnAroundTime],
+        wt: ["WT", output.waitingTime],
+        rt: ["RT", output.responseTime],
+    };
     const errors = [];
-
-    if (expected.ct) {
-        for (let i = 0; i < expected.ct.length; i++) {
-            if (output.completionTime[i] !== expected.ct[i]) {
-                pass = false;
-                errors.push(
-                    `  CT[P${i + 1}]: expected ${expected.ct[i]}, got ${output.completionTime[i]}`
-                );
+    for (const [key, [label, actual]] of Object.entries(fields)) {
+        (expected[key] || []).forEach((want, i) => {
+            if (actual[i] !== want) {
+                errors.push(`  ${label}[P${i + 1}]: expected ${want}, got ${actual[i]}`);
             }
-        }
+        });
     }
-    if (expected.tat) {
-        for (let i = 0; i < expected.tat.length; i++) {
-            if (output.turnAroundTime[i] !== expected.tat[i]) {
-                pass = false;
-                errors.push(
-                    `  TAT[P${i + 1}]: expected ${expected.tat[i]}, got ${output.turnAroundTime[i]}`
-                );
-            }
-        }
-    }
-    if (expected.wt) {
-        for (let i = 0; i < expected.wt.length; i++) {
-            if (output.waitingTime[i] !== expected.wt[i]) {
-                pass = false;
-                errors.push(
-                    `  WT[P${i + 1}]: expected ${expected.wt[i]}, got ${output.waitingTime[i]}`
-                );
-            }
-        }
-    }
-    if (expected.rt) {
-        for (let i = 0; i < expected.rt.length; i++) {
-            if (output.responseTime[i] !== expected.rt[i]) {
-                pass = false;
-                errors.push(
-                    `  RT[P${i + 1}]: expected ${expected.rt[i]}, got ${output.responseTime[i]}`
-                );
-            }
-        }
-    }
+    const pass = errors.length === 0;
 
     if (pass) {
         passedTests++;
