@@ -3,106 +3,97 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Scheduling Algorithms</title>
+        <title>CPU Scheduling Algorithms</title>
         <link rel="icon" href="favicon.png" />
         <link rel="stylesheet" href="style.css" />
-        <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-        />
     </head>
 
     <body>
-        <h1>Scheduling Algorithms</h1>
-        <h3>Instructions :</h3>
-        <ol class="instructions">
-            <li>Tiebreaker is Process ID.</li>
-            <li>When burst time is criteria, total burst time is taken into consideration.</li>
-            <li>Context Switch not considered at start and end of processes.</li>
-        </ol>
-        <h3>Preferences :</h3>
-        <ol class="preferences">
-            <li>
-                Priority : 1 is
-                <button id="priority-toggle-btn">
-                    <span id="priority-preference">high</span>
-                    <i class="fa fa-refresh"></i>
-                </button>
-            </li>
-        </ol>
-        <form id="algorithms-form">
-            <label for="algo"><h3>Algorithms :</h3></label>
-            <select name="algo" id="algo">
-                <option value="fcfs">First Come First Serve (FCFS)</option>
-                <option value="sjf">Shortest Job First (SJF)</option>
-                <option value="ljf">Longest Job First (LJF)</option>
-                <option value="srtf">Shortest Remaining Job First (SRTF)</option>
-                <option value="lrtf">Longest Remaining Job First (LRTF)</option>
-                <option value="rr">Round Robin</option>
-                <option value="pnp">Priority (Non Preemptive)</option>
-                <option value="pp">Priority (Preemptive)</option>
-                <option value="hrrn">Highest Response Ratio Next (HRRN)</option>
-            </select>
-        </form>
-        <br />
-        <table class="main-table">
-            <thead>
-                <tr>
-                    <th class="process-id">Process ID</th>
-                    <th class="priority hide">Priority</th>
-                    <th class="arrival-time">Arrival Time</th>
-                    <th class="process-time" colspan="1">Process Time</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="process-id" rowspan="2">P1</td>
-                    <td class="priority hide" rowspan="2">
-                        <input type="number" min="1" step="1" value="1" />
-                    </td>
-                    <td class="arrival-time" rowspan="2">
-                        <input type="number" min="0" step="1" value="0" />
-                    </td>
-                    <td class="process-time cpu process-heading" colspan="">CPU</td>
-                    <td class="process-btn">
-                        <button type="button" class="add-process-btn">+</button>
-                    </td>
-                    <td class="process-btn">
-                        <button type="button" class="remove-process-btn">-</button>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="process-time cpu process-input">
-                        <input type="number" min="1" step="1" value="1" />
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <br />
-        <button type="button" class="add-btn">Add Process</button>
-        <button type="button" class="remove-btn">Delete Process</button>
-        <div id="context-switch-div">
-            <br />
-            <label for="context-switch">Context Switch Time : </label>
-            <input
-                type="number"
-                name="Context Switch"
-                id="context-switch"
-                min="0"
-                step="1"
-                value="0"
-            />
-        </div>
-        <div id="time-quantum" class="hide">
-            <br />
-            <label for="tq">Time Quantum : </label>
-            <input type="number" name="Time Quantum" id="tq" min="1" step="1" value="1" />
-        </div>
-        <br />
-        <button type="button" id="calculate">Calculate</button>
-        <button type="button" id="reset" onClick="window.location.reload();">Reset</button>
-        <div id="output"></div>
-        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <header class="page-header">
+            <h1>CPU Scheduling Algorithms</h1>
+            <p class="subtitle">
+                Enter processes, pick an algorithm, and see the schedule, the metrics and how every
+                process moves between states.
+            </p>
+        </header>
+
+        <main>
+            <section class="card" id="setup">
+                <h2>Setup</h2>
+                <div class="settings">
+                    <label class="field">
+                        <span>Algorithm</span>
+                        <select id="algo">
+                            <optgroup label="Non-preemptive">
+                                <option value="fcfs">First Come First Serve (FCFS)</option>
+                                <option value="sjf">Shortest Job First (SJF)</option>
+                                <option value="ljf">Longest Job First (LJF)</option>
+                                <option value="pnp">Priority (Non-preemptive)</option>
+                                <option value="hrrn">Highest Response Ratio Next (HRRN)</option>
+                            </optgroup>
+                            <optgroup label="Preemptive">
+                                <option value="srtf">Shortest Remaining Time First (SRTF)</option>
+                                <option value="lrtf">Longest Remaining Time First (LRTF)</option>
+                                <option value="pp">Priority (Preemptive)</option>
+                                <option value="rr">Round Robin (RR)</option>
+                            </optgroup>
+                        </select>
+                    </label>
+                    <label class="field priority-only">
+                        <span>Priority order</span>
+                        <select id="priority-order">
+                            <option value="1">1 is the highest priority</option>
+                            <option value="-1">1 is the lowest priority</option>
+                        </select>
+                    </label>
+                    <label class="field rr-only">
+                        <span>Time quantum</span>
+                        <input type="number" id="tq" min="1" step="1" value="1" />
+                    </label>
+                    <label class="field">
+                        <span>Context switch time</span>
+                        <input type="number" id="context-switch" min="0" step="1" value="0" />
+                    </label>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="process-table">
+                        <thead>
+                            <tr>
+                                <th>Process</th>
+                                <th class="priority-only">Priority</th>
+                                <th>Arrival</th>
+                                <th>Bursts <small>(CPU, IO, CPU, …)</small></th>
+                                <th><span class="visually-hidden">Actions</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="processes"></tbody>
+                    </table>
+                </div>
+
+                <div class="actions">
+                    <button type="button" id="add-process" class="secondary">+ Add process</button>
+                    <span class="spacer"></span>
+                    <button type="button" id="reset" class="ghost">Reset</button>
+                    <button type="button" id="calculate" class="primary">Calculate</button>
+                </div>
+
+                <details class="notes">
+                    <summary>How ties and switches are handled</summary>
+                    <ul>
+                        <li>Ties go to the lower process ID.</li>
+                        <li>Burst-based algorithms compare the total CPU burst time.</li>
+                        <li>No context switch is counted at the very start or end.</li>
+                    </ul>
+                </details>
+            </section>
+
+            <section id="output">
+                <p class="empty-state">Results show up here after you press Calculate.</p>
+            </section>
+        </main>
+
+        <script src="https://www.gstatic.com/charts/loader.js"></script>
         <script
             src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js"
             integrity="sha512-d9xgZrVZpmmQlfonhQUvTR7lMPtO7NkZMkA0ABN3PHCbKA5nqylQ/yWlFAyY6hYgdF1Qh6nYiuADWwKB4C2WSw=="
