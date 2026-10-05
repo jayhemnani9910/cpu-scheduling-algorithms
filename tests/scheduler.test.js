@@ -435,6 +435,36 @@ runTest(
     { timeQuantum: 1 }
 );
 
+runTest(
+    "RR, CS=1, lone process keeps the CPU without a switch",
+    [{ at: 0, bt: 5 }],
+    "rr",
+    { ct: [5], rt: [0] },
+    { timeQuantum: 1, contextSwitch: 1 }
+);
+
+runTest(
+    "RR, CS=1, switch only when another process is waiting",
+    [
+        { at: 0, bt: 4 },
+        { at: 3, bt: 1 },
+    ],
+    "rr",
+    { ct: [4, 6], rt: [0, 2] },
+    { timeQuantum: 2, contextSwitch: 1 }
+);
+
+runTest(
+    "RR, CS=1, two processes alternate with a switch each time",
+    [
+        { at: 0, bt: 3 },
+        { at: 0, bt: 3 },
+    ],
+    "rr",
+    { ct: [9, 11], rt: [0, 2] },
+    { timeQuantum: 1, contextSwitch: 1 }
+);
+
 // ==================== SUMMARY ====================
 
 console.log("\n══════════════════════════════════════════════════");

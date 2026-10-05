@@ -299,12 +299,17 @@ function CPUScheduler(input, utility, output, priorityPreference = 1) {
                         output.timeLog.push(JSON.parse(JSON.stringify(currentTimeLog)));
                         currentTimeLog.move = [];
                     }
-                    output.schedule.push([-2, input.contextSwitch]);
-                    for (let i = 0; i < input.contextSwitch; i++, currentTimeLog.time++) {
-                        updateReadyQueue(currentTimeLog);
-                    }
-                    if (input.contextSwitch > 0) {
-                        output.contextSwitches++;
+                    //context switch, unless the preempted process is the only one ready
+                    let runsAgain =
+                        currentTimeLog.ready.length == 1 && currentTimeLog.ready[0] == found;
+                    if (!runsAgain) {
+                        output.schedule.push([-2, input.contextSwitch]);
+                        for (let i = 0; i < input.contextSwitch; i++, currentTimeLog.time++) {
+                            updateReadyQueue(currentTimeLog);
+                        }
+                        if (input.contextSwitch > 0) {
+                            output.contextSwitches++;
+                        }
                     }
                 }
             } else {

@@ -72,45 +72,25 @@ inputOnChange();
 let process = 1;
 //resize burst time rows size on +/-
 
-function gcd(x, y) {
-    while (y) {
-        let t = y;
-        y = x % y;
-        x = t;
-    }
-    return x;
-}
-
-function lcm(x, y) {
-    return (x * y) / gcd(x, y);
-}
-
-function lcmAll() {
-    let result = 1;
-    for (let i = 0; i < process; i++) {
-        result = lcm(result, document.querySelector(".main-table").rows[2 * i + 2].cells.length);
-    }
-    return result;
-}
-
 function updateColspan() {
-    //update burst time cell colspan
-    let totalColumns = lcmAll();
-    let processHeading = document.querySelector("thead .process-time");
-    processHeading.setAttribute("colspan", totalColumns);
-    let processTimes = [];
+    //burst time cells are one column each, the last cell of a short row stretches to the widest row
     let table = document.querySelector(".main-table");
+    let processTimes = [];
     for (let i = 0; i < process; i++) {
-        let row = table.rows[2 * i + 2].cells;
-        processTimes.push(row.length);
+        processTimes.push(table.rows[2 * i + 2].cells.length);
     }
+    let totalColumns = Math.max(...processTimes);
+    document.querySelector("thead .process-time").setAttribute("colspan", totalColumns);
     for (let i = 0; i < process; i++) {
         let row1 = table.rows[2 * i + 1].cells;
         let row2 = table.rows[2 * i + 2].cells;
-        for (let j = 0; j < processTimes[i]; j++) {
-            row1[j + 3].setAttribute("colspan", totalColumns / processTimes[i]);
-            row2[j].setAttribute("colspan", totalColumns / processTimes[i]);
+        let n = processTimes[i];
+        for (let j = 0; j < n; j++) {
+            row1[j + 3].removeAttribute("colspan");
+            row2[j].removeAttribute("colspan");
         }
+        row1[n + 2].setAttribute("colspan", totalColumns - n + 1);
+        row2[n - 1].setAttribute("colspan", totalColumns - n + 1);
     }
 }
 
@@ -440,7 +420,11 @@ function toggleTimeLogArrowColor(timeLog, color) {
         "block-ready",
     ];
     timeLog.move.forEach((element) => {
-        document.getElementById(timeLogMove[element]).style.color = color;
+        //the output may have been cleared by a new calculation
+        let arrow = document.getElementById(timeLogMove[element]);
+        if (arrow) {
+            arrow.style.color = color;
+        }
     });
 }
 
@@ -546,7 +530,8 @@ function showTimeLog(output, outputDiv) {
     timeLogDiv.appendChild(startTimeLogButton);
     outputDiv.appendChild(timeLogDiv);
 
-    document.querySelector("#start-time-log").onclick = () => {
+    startTimeLogButton.onclick = () => {
+        startTimeLogButton.disabled = true;
         let timeLogDiv = document.getElementById("time-log-div");
         let timeLogOutputDiv = document.createElement("div");
         timeLogOutputDiv.id = "time-log-output-div";
@@ -606,7 +591,7 @@ function showRoundRobinChart(outputDiv) {
         for (let i = 0; i < 4; i++) {
             roundRobinChartData[i].push(roundRobinOutput.averageTimes[i]);
         }
-        roundRobinChartData[4].push(roundRobinOutput.contextSwitches - 1);
+        roundRobinChartData[4].push(Math.max(0, roundRobinOutput.contextSwitches - 1));
     }
     let roundRobinChartCanvas = document.createElement("canvas");
     roundRobinChartCanvas.id = "round-robin-chart";
