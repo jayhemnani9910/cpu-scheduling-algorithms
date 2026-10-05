@@ -183,7 +183,8 @@ function CPUScheduler(input, utility, output, priorityPreference = 1) {
             moveElement(id, log.running, log.terminate);
             log.move.push(2);
         } else {
-            utility.returnTime[id] = log.time + input.processTime[id][utility.currentProcessIndex[id]];
+            utility.returnTime[id] =
+                log.time + input.processTime[id][utility.currentProcessIndex[id]];
             utility.currentProcessIndex[id]++;
             moveElement(id, log.running, log.block);
             log.move.push(4);
