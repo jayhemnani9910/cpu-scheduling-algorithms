@@ -81,8 +81,19 @@
                 <details class="notes">
                     <summary>How ties and switches are handled</summary>
                     <ul>
-                        <li>Ties go to the lower process ID.</li>
+                        <li>
+                            Ties go to the lower process ID; in preemptive mode a tie preempts the
+                            running process.
+                        </li>
                         <li>Burst-based algorithms compare the total CPU burst time.</li>
+                        <li>
+                            Waiting time is turnaround minus CPU time, so time spent in IO counts as
+                            waiting.
+                        </li>
+                        <li>
+                            In preemptive mode the next process is chosen before the context switch
+                            starts.
+                        </li>
                         <li>No context switch is counted at the very start or end.</li>
                     </ul>
                 </details>

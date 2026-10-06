@@ -60,6 +60,7 @@ function runTest(name, processes, algorithm, expected, options = {}) {
         tat: ["TAT", output.turnAroundTime],
         wt: ["WT", output.waitingTime],
         rt: ["RT", output.responseTime],
+        switches: ["Context switches", [output.contextSwitches]],
     };
     const errors = [];
     for (const [key, [label, actual]] of Object.entries(fields)) {
@@ -430,6 +431,17 @@ runTest(
     "rr",
     { ct: [9, 11], rt: [0, 2] },
     { timeQuantum: 1, contextSwitch: 1 }
+);
+
+runTest(
+    "RR, CS=0, switches are still counted",
+    [
+        { at: 0, bt: 3 },
+        { at: 0, bt: 3 },
+    ],
+    "rr",
+    { ct: [5, 6], switches: [6] },
+    { timeQuantum: 1, contextSwitch: 0 }
 );
 
 // ==================== SUMMARY ====================
