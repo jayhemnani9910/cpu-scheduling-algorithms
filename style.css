@@ -253,6 +253,50 @@ th small {
     text-align: right;
 }
 
+/* the column headers name these on wide screens; the phone layout below shows them inline */
+.cell-label {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.cell-name {
+    display: none;
+}
+
+/* on phones each process row wraps instead of scrolling, so its buttons stay on screen */
+@media (max-width: 560px) {
+    .process-table thead {
+        display: none;
+    }
+
+    .process-table tr {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 6px 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .process-table td {
+        border: 0;
+        padding: 0;
+    }
+
+    .process-table .row-actions {
+        margin-left: auto;
+    }
+
+    .cell-name {
+        display: block;
+    }
+}
+
 .actions {
     display: flex;
     flex-wrap: wrap;

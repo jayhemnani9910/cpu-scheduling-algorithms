@@ -46,7 +46,7 @@
 Once a job enters the Running Queue, it will only leave when its required CPU Burst Time is completed or it requires an I/O Job.
 
 **Preemptive:**
-A job in the Running Queue can be removed (preeempted) by other process of higher priority or with better criteria satisfaction or the given time quantum is completed.
+A job in the Running Queue can be removed (preempted) by another process with higher priority, better criteria, or equal criteria and a lower process ID, or when the time quantum ends.
 
 #### Different States in CPU Scheduler
 

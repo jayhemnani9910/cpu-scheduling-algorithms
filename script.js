@@ -54,8 +54,8 @@ function burstHTML(kind) {
 function addProcess() {
     processBody.insertRow().innerHTML = `
         <td class="process-id"></td>
-        <td class="priority-only">${numberInput(1, 1)}</td>
-        <td>${numberInput(0, 0)}</td>
+        <td class="priority-only"><label class="cell-label"><span class="cell-name">Priority</span>${numberInput(1, 1)}</label></td>
+        <td><label class="cell-label"><span class="cell-name">Arrival</span>${numberInput(0, 0)}</label></td>
         <td><div class="bursts">${burstHTML("CPU")}</div></td>
         <td class="row-actions">
             <button type="button" class="icon" data-action="add-io" title="Add an IO burst and a CPU burst">+ IO</button>

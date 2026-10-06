@@ -169,9 +169,8 @@ function CPUScheduler(input, utility, output, priorityPreference = 1) {
         for (let i = 0; i < input.contextSwitch; i++, log.time++) {
             updateReadyQueue();
         }
-        if (input.contextSwitch > 0) {
-            output.contextSwitches++;
-        }
+        //counted even when switching costs no time, so the RR chart's switch line is not flat at 0
+        output.contextSwitches++;
     }
 
     //the current CPU burst is used up: terminate, or go to IO
