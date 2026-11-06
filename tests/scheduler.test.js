@@ -131,6 +131,18 @@ runTest("Single process", [{ at: 0, bt: 5 }], "fcfs", {
 });
 
 runTest(
+    "Process with IO burst (CPU, IO, CPU)",
+    [{ at: 0, processTime: [2, 3, 2] }],
+    "fcfs",
+    {
+        ct: [7],
+        tat: [7],
+        wt: [3],
+        rt: [0],
+    }
+);
+
+runTest(
     "Processes with gap (idle CPU)",
     [
         { at: 0, bt: 2 },
