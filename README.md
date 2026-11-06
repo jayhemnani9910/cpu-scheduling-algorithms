@@ -74,7 +74,7 @@ npm install
 npm test
 ```
 
-There are 23 tests. They load `scheduler.js`, the same file the page ships, and check completion, turnaround, waiting and response times, plus the context switch count in some cases. They cover all 9 algorithms, arrival order, preemption, ties and context switch time. No test uses an IO burst yet, and `script.js` has no unit tests.
+There are 24 tests. They load `scheduler.js`, the same file the page ships, and check completion, turnaround, waiting and response times, plus the context switch count in some cases. They cover all 9 algorithms, arrival order, preemption, ties, context switch time and IO bursts. `script.js` has no unit tests.
 
 `npm run lint`, `npm run format:check` and `npx htmlhint index.html` run in CI next to the tests.
 

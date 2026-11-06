@@ -25,3 +25,5 @@ yarn-error.log*
 # /audit outputs
 graphify-out/
 .audit/
+
+CODEBASE_OVERVIEW.md
