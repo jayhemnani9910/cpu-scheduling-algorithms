@@ -33,6 +33,14 @@ body:
           placeholder: "Chrome 126, Firefox 127, etc."
       validations:
           required: true
+    - type: input
+      id: os
+      attributes:
+          label: Operating system
+          description: What operating system are you using?
+          placeholder: "Windows 11, macOS Sonoma, Ubuntu 24.04, etc."
+      validations:
+          required: true
     - type: dropdown
       id: algorithm
       attributes:
