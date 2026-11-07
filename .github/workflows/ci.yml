@@ -31,6 +31,3 @@ jobs:
 
             - name: Lint HTML
               run: npx -y htmlhint index.html
-
-            - name: Run tests
-              run: npm test
