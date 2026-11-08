@@ -84,7 +84,7 @@ function runTest(name, processes, algorithm, expected, options = {}) {
 
 // ==================== TEST CASES ====================
 
-console.log("\n╔══════════════════════════════════════════════════╗");
+console.log("\n╔══════════════════════════════════════════════╗");
 console.log("║     CPU Scheduling Algorithms - Test Suite      ║");
 console.log("╚══════════════════════════════════════════════════╝\n");
 
@@ -444,9 +444,21 @@ runTest(
     { timeQuantum: 1, contextSwitch: 0 }
 );
 
+// ---- SRTF context switch (issue #10) ----
+runTest(
+    "SRTF, CS=1, shorter job preempts the running one",
+    [
+        { at: 0, bt: 5 },
+        { at: 2, bt: 2 },
+    ],
+    "srtf",
+    { ct: [9, 5], switches: [3] },
+    { contextSwitch: 1 }
+);
+
 // ==================== SUMMARY ====================
 
-console.log("\n══════════════════════════════════════════════════");
+console.log("\n═══════════════════════════════════════════════");
 console.log(`  Total: ${totalTests}  |  ✅ Passed: ${passedTests}  |  ❌ Failed: ${failedTests}`);
 console.log("══════════════════════════════════════════════════\n");
 

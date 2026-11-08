@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- SRTF context-switch test: shorter job preempts with CS=1 (issue #10).
 - Demo GIF at the top of the README.
 - CHANGELOG.
 
